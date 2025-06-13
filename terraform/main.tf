@@ -42,15 +42,16 @@ module "eks" {
 module "rds" {
   source = "./modules/rds"
 
-  rds_instance_identifier = "banking-db"
-  rds_allocated_storage   = var.allocated_storage
-  rds_engine              = var.db_engine
-  rds_engine_version      = var.engine_version
-  rds_instance_class      = var.db_instance_class
-  rds_db_name             = var.db_name
-  rds_username            = var.db_username
-  rds_password            = var.db_password
-  rds_skip_final_snapshot = true
+  rds_instance_identifier = var.rds_instance_identifier
+  rds_allocated_storage   = var.rds_allocated_storage
+  rds_engine              = var.rds_engine
+  rds_engine_version      = var.rds_engine_version
+  rds_instance_class      = var.rds_instance_class
+  rds_db_name             = var.rds_db_name
+  rds_username            = var.rds_username
+  rds_password            = var.rds_password
+  rds_skip_final_snapshot = var.rds_skip_final_snapshot
   vpc_id                  = module.vpc.vpc_id
   subnet_ids              = module.vpc.private_subnet_ids
 }
+

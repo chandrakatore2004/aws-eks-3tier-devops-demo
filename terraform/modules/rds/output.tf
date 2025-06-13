@@ -6,5 +6,5 @@ output "rds_endpoint" {
 
 output "db_name" {
   description = "Database name"
-  value       = aws_db_instance.mysql.db_name
+  value       = aws_db_instance.main.db_name
 }
