@@ -42,7 +42,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.8.4  # 
+          terraform_version: 1.8.4
 
       - name: Terraform Init
         run: terraform init
@@ -53,14 +53,23 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
+      - name: Create secrets.auto.tfvars
+        run: |
+          echo 'rds_username = "${{ secrets.RDS_USERNAME }}"' > secrets.auto.tfvars
+          echo 'rds_password = "${{ secrets.RDS_PASSWORD }}"' >> secrets.auto.tfvars
+
       - name: Terraform Plan
         if: ${{ github.event.inputs.action == 'plan' }}
-        run: terraform plan -input=false -var-file=${{ github.event.inputs.tfvars_file }}
+        run: terraform plan -input=false -var-file=${{ github.event.inputs.tfvars_file }} -var-file=secrets.auto.tfvars
 
       - name: Terraform Apply
         if: ${{ github.event.inputs.action == 'apply' }}
-        run: terraform apply -auto-approve -input=false -var-file=${{ github.event.inputs.tfvars_file }}
+        run: terraform apply -auto-approve -input=false -var-file=${{ github.event.inputs.tfvars_file }} -var-file=secrets.auto.tfvars
 
       - name: Terraform Destroy
         if: ${{ github.event.inputs.action == 'destroy' }}
-        run: terraform destroy -auto-approve -input=false -var-file=${{ github.event.inputs.tfvars_file }}
+        run: terraform destroy -auto-approve -input=false -var-file=${{ github.event.inputs.tfvars_file }} -var-file=secrets.auto.tfvars
+
+      - name: Clean up secrets.auto.tfvars
+        if: always()
+        run: rm -f secrets.auto.tfvars

@@ -110,4 +110,9 @@ variable "rds_skip_final_snapshot" {
   description = "Skip final snapshot on destroy"
   default     = true
 }
-
+variable "rds_port" {
+  type        = number
+  description = "Port for the RDS instance"
+  default     = 3306
+  
+}

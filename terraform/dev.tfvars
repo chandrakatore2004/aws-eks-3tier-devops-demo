@@ -32,12 +32,11 @@ node_groups = {
 }
 
 # RDS variables
-rds_instance_identifier = "banking-db"
+rds_instance_identifier = "ashokit-ecomm-db"
 rds_allocated_storage   = 20
 rds_engine              = "mysql"
 rds_engine_version      = "8.0"
 rds_instance_class      = "db.t3.micro"
-rds_db_name             = "bankingdb"
-rds_username            = "adminuser"
-rds_password            = "StrongPassword123!"
+rds_db_name             = "ashokit_ecomm"
+rds_port               = 3306
 rds_skip_final_snapshot = true
