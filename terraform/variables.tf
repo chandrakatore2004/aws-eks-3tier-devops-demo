@@ -114,5 +114,5 @@ variable "rds_port" {
   type        = number
   description = "Port for the RDS instance"
   default     = 3306
-  
+
 }

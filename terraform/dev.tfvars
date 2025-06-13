@@ -38,5 +38,5 @@ rds_engine              = "mysql"
 rds_engine_version      = "8.0"
 rds_instance_class      = "db.t3.micro"
 rds_db_name             = "ashokit_ecomm"
-rds_port               = 3306
+rds_port                = "3306"
 rds_skip_final_snapshot = true
