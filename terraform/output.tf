@@ -14,8 +14,8 @@ output "vpc_id" {
 }
 
 output "rds_endpoint" {
-  value = module.rds.rds_endpoint
   description = "Expose RDS Endpoint from RDS module"
+  value       = module.rds.rds_endpoint
 }
 
 
