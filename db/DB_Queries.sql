@@ -1,13 +1,13 @@
 
---Schema fullstack
+
 
 DROP SCHEMA IF EXISTS `ashokit_ecomm`;
 
 CREATE SCHEMA `ashokit_ecomm`;
-USE `ashokit_ecomm` ;
+USE `ashokit_ecomm`;
 
 
--- Table `fullstack`.`product_category`
+
 
 CREATE TABLE IF NOT EXISTS `ashokit_ecomm`.`product_category` (
   `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
@@ -17,7 +17,7 @@ ENGINE=InnoDB
 AUTO_INCREMENT = 1;
 
 
--- Table `fullstack`.`product`
+
 
 CREATE TABLE IF NOT EXISTS `ashokit_ecomm`.`product` (
   `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
@@ -39,7 +39,6 @@ ENGINE=InnoDB
 AUTO_INCREMENT = 1;
 
 
--- insert product categories
 
 
 INSERT INTO product_category(category_name) VALUES ('Laptops');
@@ -48,7 +47,7 @@ INSERT INTO product_category(category_name) VALUES ('Shirts');
 INSERT INTO product_category(category_name) VALUES ('Beauty');
 
 
--- insert products
+
 
 
 
