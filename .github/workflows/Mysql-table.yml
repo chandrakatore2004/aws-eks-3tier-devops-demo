@@ -1,4 +1,4 @@
-name: 'RDS Database Initialization'
+name: 'Initialize MySQL Tables & Data'
 
 on:
   workflow_run:
