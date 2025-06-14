@@ -1,51 +1,35 @@
 name: 'RDS Database Initialization'
 
 on:
-  workflow_dispatch:
-    inputs:
-      sql_file:
-        description: 'SQL file to initialize the database'
-        required: true
-        default: 'db/DB_Queries.sql'
-
-env:
-  DB_HOST: ${{ secrets.RDS_ENDPOINT }}
-  DB_PORT: 3306
-  DB_NAME: ashokit_ecomm
-  DB_USER: ${{ secrets.RDS_USERNAME }}
-  DB_PASSWORD: ${{ secrets.RDS_PASSWORD }}
-
-permissions:
-  contents: read
+  workflow_run:
+    workflows: ["Terraform Infrastructure Pipeline"]
+    types:
+      - completed
 
 jobs:
   init-db:
-    name: Run SQL on RDS
-    runs-on: qa  # self-hosted runner label
+    name: Initialize MySQL Tables & Data
+    runs-on: qa  # your self-hosted runner label
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Ensure MySQL client is installed
+      - name: Install MySQL client
         run: |
-          if ! command -v mysql &> /dev/null; then
-            echo "MySQL client not found. Installing..."
-            sudo apt-get update && sudo apt-get install -y mysql-client
-          else
-            echo "MySQL client already installed."
-          fi
+          sudo apt-get update
+          sudo apt-get install -y mysql-client
 
-      - name: Wait for RDS to accept connections
+      - name: Connect to MySQL and run SQL script
+        env:
+          DB_HOST: ${{ secrets.RDS_ENDPOINT }}
+          DB_PORT: 3306
+          DB_USER: ${{ secrets.RDS_USERNAME }}
+          DB_PASSWORD: ${{ secrets.RDS_PASSWORD }}
         run: |
-          echo "Waiting for RDS to accept connections..."
-          for i in {1..30}; do
-            mysqladmin ping -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" --silent && break
-            echo "Waiting 10 seconds..."
-            sleep 10
-          done
-
-      - name: Execute SQL initialization script
-        run: |
-          echo "Running SQL file: ${{ github.event.inputs.sql_file }}"
-          mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" < ${{ github.event.inputs.sql_file }}
+          echo "Waiting for RDS to be ready..."
+          sleep 60  # Give RDS some time to become available
+          
+          echo "Running SQL script against RDS at $DB_HOST"
+          mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" < db/DB_Queries.sql

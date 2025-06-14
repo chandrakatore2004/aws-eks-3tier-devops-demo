@@ -73,3 +73,9 @@ jobs:
       - name: Clean up secrets.auto.tfvars
         if: always()
         run: rm -f secrets.auto.tfvars
+
+      - name: Terraform Output
+        id: tf_output
+        run: |
+            echo "RDS_ENDPOINT=$(terraform output -raw rds_endpoint)" >> $GITHUB_ENV
+
