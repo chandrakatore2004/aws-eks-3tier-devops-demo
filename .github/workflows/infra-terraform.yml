@@ -75,6 +75,7 @@ jobs:
         run: rm -f secrets.auto.tfvars
 
       - name: Terraform Output
+        if: ${{ github.event.inputs.action == 'apply' }}
         id: tf_output
         run: |
             echo "RDS_ENDPOINT=$(terraform output -raw rds_endpoint)" >> $GITHUB_ENV
