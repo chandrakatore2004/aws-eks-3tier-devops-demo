@@ -8,7 +8,7 @@ jobs:
   init-db:
     name: Initialize MySQL Tables & Data
     runs-on: qa  # self-hosted runner
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
 
     steps:
       - name: Checkout repository
