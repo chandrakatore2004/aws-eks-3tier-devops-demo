@@ -2,10 +2,7 @@ name: 'Initialize MySQL Tables & Data'
 
 on:
   workflow_dispatch: {}  # Manual trigger
-  workflow_run:          # Trigger after "Terraform Infrastructure Pipeline" completes successfully
-    workflows: ["Terraform Infrastructure Pipeline"]
-    types:
-      - completed
+
 
 jobs:
   init-db:
