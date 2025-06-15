@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: productscontainer
-          image: image: ${FULL_IMAGE}
+          image: ${FULL_IMAGE}
           ports:
             - containerPort: 8080
 ---
