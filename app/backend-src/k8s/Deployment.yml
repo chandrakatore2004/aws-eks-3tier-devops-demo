@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: productscontainer
-          image: ${ECR_IMAGE_URI}   # <-- placeholder for dynamic substitution
+          image: image: ${ECR_REGISTRY}/ecommerce-backend:${IMAGE_TAG}
           ports:
             - containerPort: 8080
 ---
