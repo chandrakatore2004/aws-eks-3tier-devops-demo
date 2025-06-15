@@ -9,7 +9,7 @@ on:
 
 jobs:
   backend-ci:
-    runs-on: [self-hosted, linux, qa]  # Your self-hosted runner labels
+    runs-on: [self-hosted, linux, qa]  # self-hosted runner labels
 
     env:
       AWS_REGION: ap-south-1
