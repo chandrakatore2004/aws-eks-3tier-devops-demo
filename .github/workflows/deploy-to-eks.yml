@@ -35,7 +35,7 @@ jobs:
 
       - name: Render Kubernetes manifest
         run: |
-          export IMAGE_TAG=${{ github.run_id }}
+          export IMAGE_TAG=latest
           export ECR_REGISTRY=$(aws sts get-caller-identity --query 'Account' --output text).dkr.ecr.$AWS_REGION.amazonaws.com
           export FULL_IMAGE="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
           envsubst < app/backend-src/k8s/Deployment.yml > k8s-deploy.yml
