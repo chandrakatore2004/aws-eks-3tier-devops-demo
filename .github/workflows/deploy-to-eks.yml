@@ -30,7 +30,7 @@ jobs:
         run: |
           aws eks update-kubeconfig \
             --region $AWS_REGION \
-            --name ${{ secrets.EKS_CLUSTER_NAME }}
+            --name ${{ secrets.AWS_SECRET_EKS_CLUSTER_NAME }}
 
       - name: Set ECR image URI
         run: echo "ECR_IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.run_id }}" >> $GITHUB_ENV
