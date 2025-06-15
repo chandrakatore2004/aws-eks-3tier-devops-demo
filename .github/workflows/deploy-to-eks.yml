@@ -1,4 +1,4 @@
-name: Deploy to EKS
+name: Deploy Backend to EKS CD
 
 on:
   workflow_dispatch:
@@ -6,6 +6,10 @@ on:
 jobs:
   deploy-to-eks:
     runs-on: [self-hosted, linux, qa]
+
+    env:
+      AWS_REGION: ap-south-1
+      ECR_REPOSITORY: ecommerce-backend
 
     steps:
       - name: Checkout source
@@ -16,15 +20,23 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
       - name: Set up kubeconfig for EKS
         run: |
-          echo "Setting up kubeconfig for cluster: ${{ secrets.AWS_SECRET_EKS_CLUSTER_NAME }}"
-          aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ secrets.AWS_SECRET_EKS_CLUSTER_NAME }}
-          kubectl get nodes  # verify authentication
+          aws eks update-kubeconfig \
+            --region $AWS_REGION \
+            --name ${{ secrets.EKS_CLUSTER_NAME }}
 
-      - name: Deploy to EKS
-        run: |
-          echo "Deploying backend application..."
-          kubectl apply -f app/backend-src/k8s/Deployment.yml
+      - name: Set ECR image URI
+        run: echo "ECR_IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.run_id }}" >> $GITHUB_ENV
+
+      - name: Render Kubernetes manifest
+        run: envsubst < app/backend-src/k8s/Deployment.yml > k8s-deploy.yml
+
+      - name: Apply manifest to EKS
+        run: kubectl apply -f k8s-deploy.yml
