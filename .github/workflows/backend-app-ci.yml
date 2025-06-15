@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  backend-ci-cd:
+  backend-ci:
     runs-on: [self-hosted, linux, qa]  # Your self-hosted runner labels
 
     env:
