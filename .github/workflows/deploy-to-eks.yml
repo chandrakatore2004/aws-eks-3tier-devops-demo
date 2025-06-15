@@ -30,7 +30,7 @@ jobs:
         run: |
           aws eks update-kubeconfig \
             --region $AWS_REGION \
-            --name ${{ secrets.EKS_CLUSTER_NAME }}
+            --name ${{ secrets.AWS_EKS_CLUSTER_NAME }}
 
       - name: Render Kubernetes manifest
         run: |
