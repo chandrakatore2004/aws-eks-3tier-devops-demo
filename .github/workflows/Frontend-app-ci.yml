@@ -1,4 +1,4 @@
-name: Frontend CI - Build & Push Docker to ECR
+name: Frontend-app-ci # Frontend CI Pipeline
 
 on:
   push:
