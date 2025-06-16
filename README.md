@@ -26,7 +26,7 @@ Step-2: Connect with MySQL DB using Workbench s/w and execute sql queries to ins
 
 Note: DB Queries file available in backend_app git repo
 
-# Backend App Git Repo : https://github.com/ashokitschool/01_products_api.git
+# Backend App Git Repo : https://github.com/chandrakatore2004/aws-eks-3tier-devops-demo
 
 	DB Queries File Name: DB_Setup.sql
 
@@ -34,7 +34,7 @@ Note: DB Queries file available in backend_app git repo
 Backend App Deployment
 =======================
 
-# Backend App Git Repo : https://github.com/ashokitschool/01_products_api.git
+# Backend App Git Repo : https://github.com/chandrakatore2004/aws-eks-3tier-devops-demo
 
 Step-1 : Configure RDS DB instance connectivity Details in backend app git repo
 	
@@ -62,7 +62,7 @@ Note: If you are able to see products data in json format then your backend app 
 Frontend App Deployment
 =========================
 
-# Frontend App Git Repo : https://github.com/ashokitschool/ashokit_ecomm_store.git
+# Frontend App Git Repo : https://github.com/chandrakatore2004/aws-eks-3tier-devops-demo
 
 Step-1 : Configure Backend API LBR Url in frontend application git repo
 
@@ -81,5 +81,5 @@ Step-2 : Create CI CD Job for frontend application deployment
 	Stage-3 : Push Docker Image to AWS ECR/ docker hub
 
 	Stage-4 : K8S deployment
-    
+
 access app using LBR http://a8f2b3fcdaf5248629b4a7ccf797d326-982956579.ap-south-1.elb.amazonaws.com/
