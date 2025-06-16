@@ -66,7 +66,6 @@ Frontend App Git Repo : https://github.com/chandrakatore2004/aws-eks-3tier-devop
 Step-1 : Configure Backend API LBR Url in frontend application git repo
 
 	File To Configure Bakend URL : ashokit_ecomm_store/src/app/constants.ts
-E:\DevOps_Videos\DevOps_Projects\aws-eks-3tier-devops-demo\app\frontend-src\src\app-constants.ts
 app\frontend-src\src\app-constants.ts
 ---------
    static BACKEND_API_URL= 'http://a2724e73f8f6843edb1d85f638559669-781908185.ap-south-1.elb.amazonaws.com/products';
