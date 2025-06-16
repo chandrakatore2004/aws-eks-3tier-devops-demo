@@ -1,0 +1,41 @@
+name: Frontend CI - Build & Push Docker to ECR
+
+on:
+  push:
+    paths:
+      - 'app/frontend-src/**'
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: [self-hosted, linux, qa] 
+
+    env:
+      AWS_REGION: ap-south-1
+      ECR_REPOSITORY: ecommerce-frontend
+      IMAGE_TAG: latest
+      ECR_REGISTRY: 543808516178.dkr.ecr.ap-south-1.amazonaws.com
+
+    steps:
+      - name: Checkout frontend source
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::543808516178:role/github-actions-deploy-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Docker image
+        run: |
+          cd app/frontend-src
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+
+      - name: Push image to ECR
+        run: |
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG

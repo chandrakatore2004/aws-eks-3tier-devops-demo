@@ -1,0 +1,35 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ecommstorefrontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ecommstore
+  template:
+    metadata:
+      labels:
+        app: ecommstore
+    spec:
+      containers:
+        - name: ecommstorecontainer
+          image: chandrakatore1977/ecomm_store
+          ports:
+            - containerPort: 80  # Changed from 3000 to 80
+          env:
+            - name: BACKEND_URL
+              value: "http://productssvc"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontendsvc
+spec:
+  type: LoadBalancer
+  selector:
+    app: ecommstore
+  ports:
+    - port: 80
+      targetPort: 80  # Match updated containerPort
