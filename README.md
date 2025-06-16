@@ -25,15 +25,15 @@ Step-2: Connect with MySQL DB using Workbench s/w and execute sql queries to ins
 
 Note: DB Queries file available in backend_app git repo
 
-# Backend App Git Repo : https://github.com/chandrakatore2004/aws-eks-3tier-devops-demo
+Backend App Git Repo : https://github.com/chandrakatore2004/aws-eks-3tier-devops-demo
 
 	DB Queries File Name: DB_Setup.sql
 
-=======================
+--------------
 Backend App Deployment
-=======================
 
-# Backend App Git Repo : https://github.com/chandrakatore2004/aws-eks-3tier-devops-demo
+
+Backend App Git Repo : https://github.com/chandrakatore2004/aws-eks-3tier-devops-demo
 
 Step-1 : Configure RDS DB instance connectivity Details in backend app git repo
 	
@@ -57,9 +57,9 @@ Step-3 : Access Backend API in browser using LBR url --> http://a2724e73f8f6843e
 
 Note: If you are able to see products data in json format then your backend app is running successfully.
 
-=========================
+----------------
 Frontend App Deployment
-=========================
+
 
 # Frontend App Git Repo : https://github.com/chandrakatore2004/aws-eks-3tier-devops-demo
 
