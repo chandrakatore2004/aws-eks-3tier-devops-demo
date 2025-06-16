@@ -61,7 +61,7 @@ Note: If you are able to see products data in json format then your backend app 
 Frontend App Deployment
 
 
-# Frontend App Git Repo : https://github.com/chandrakatore2004/aws-eks-3tier-devops-demo
+Frontend App Git Repo : https://github.com/chandrakatore2004/aws-eks-3tier-devops-demo
 
 Step-1 : Configure Backend API LBR Url in frontend application git repo
 
@@ -69,7 +69,7 @@ Step-1 : Configure Backend API LBR Url in frontend application git repo
 E:\DevOps_Videos\DevOps_Projects\aws-eks-3tier-devops-demo\app\frontend-src\src\app-constants.ts
 app\frontend-src\src\app-constants.ts
 
-static BACKEND_API_URL= 'http://a2724e73f8f6843edb1d85f638559669-781908185.ap-south-1.elb.amazonaws.com/products';
+   static BACKEND_API_URL= 'http://a2724e73f8f6843edb1d85f638559669-781908185.ap-south-1.elb.amazonaws.com/products';
 ------------------------------------------------------------------------------------
 Step-2 : Create CI CD Job for frontend application deployment
 
