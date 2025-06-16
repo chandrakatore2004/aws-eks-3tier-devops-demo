@@ -1,41 +1,44 @@
-name: Frontend-app-ci # Frontend CI Pipeline
+name: Frontend CI Pipeline
 
 on:
   push:
-    paths:
-      - 'app/frontend-src/**'
     branches:
       - main
+    paths:
+      - 'app/frontend-src/**'
   workflow_dispatch:
 
 jobs:
-  build-and-push:
-    runs-on: [self-hosted, linux, qa] 
+  frontend-ci:
+    runs-on: [self-hosted, linux, qa]  # Same runner labels as backend
 
     env:
       AWS_REGION: ap-south-1
       ECR_REPOSITORY: ecommerce-frontend
-      IMAGE_TAG: latest
-      ECR_REGISTRY: 543808516178.dkr.ecr.ap-south-1.amazonaws.com
+      IMAGE_TAG: ${{ github.run_id }}
 
     steps:
-      - name: Checkout frontend source
+      - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials via OIDC
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: arn:aws:iam::543808516178:role/github-actions-deploy-role
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Login to Amazon ECR
+      - name: Log in to Amazon ECR
+        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build Docker image
+      - name: Build, tag, and push Docker image to ECR
+        working-directory: app/frontend-src
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
-          cd app/frontend-src
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-
-      - name: Push image to ECR
-        run: |
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY
+          echo "Building image with tags: $IMAGE_TAG and latest"
+          docker build -t $IMAGE_URI:$IMAGE_TAG -t $IMAGE_URI:latest .
+          docker push $IMAGE_URI:$IMAGE_TAG
+          docker push $IMAGE_URI:latest
