@@ -1,6 +1,5 @@
-=================================
+----------------------------
 DevOps Project Setup (3 Tier)
-=================================
 
 => Our application contains 3 layers
 
@@ -11,9 +10,9 @@ DevOps Project Setup (3 Tier)
 3) Frontend (Angular)
 
 
-===========
+------------------
 DB Setup
-===========
+
 
 Step-1: Setup AWS RDS MySQL Instance and note down DB details
 
