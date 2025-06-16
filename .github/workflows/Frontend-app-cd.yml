@@ -1,4 +1,4 @@
-name: Deploy Frontend to EKS (CD)
+name: Frontend CD Pipeline (EKS)
 
 on:
   workflow_dispatch:
