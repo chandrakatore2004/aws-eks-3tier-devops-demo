@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: ecommstorecontainer
-          image: chandrakatore1977/ecomm_store
+          image: ${FULL_IMAGE}
           ports:
             - containerPort: 80  # Changed from 3000 to 80
           env:

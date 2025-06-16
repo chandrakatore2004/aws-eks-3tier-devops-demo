@@ -1,0 +1,57 @@
+name: Deploy Frontend to EKS (CD)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - 'app/frontend-src/k8s/**'
+
+jobs:
+  deploy-frontend:
+    runs-on: [self-hosted, linux, qa]
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      ECR_REPOSITORY: ecommerce-frontend  # Only needed if using ECR
+      EKS_CLUSTER_NAME: ${{ secrets.AWS_SECRET_EKS_CLUSTER_NAME }}
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Set up kubeconfig for EKS
+        run: |
+          aws eks update-kubeconfig \
+            --region $AWS_REGION \
+            --name $EKS_CLUSTER_NAME
+
+      - name: Render Kubernetes manifest
+        run: |
+          export IMAGE_TAG=latest
+          export ECR_REGISTRY=$(aws sts get-caller-identity --query 'Account' --output text).dkr.ecr.$AWS_REGION.amazonaws.com
+          export FULL_IMAGE="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          # Optional: If using ECR image, uncomment next line
+          # sed "s|IMAGE_PLACEHOLDER|$FULL_IMAGE|" app/frontend-src/k8s/Deployment.yml > k8s-frontend-deploy.yml
+          
+          # Using Docker Hub image as is
+          cp app/frontend-src/k8s/Deployment.yml k8s-frontend-deploy.yml
+
+      - name: Deploy to EKS
+        run: kubectl apply -f k8s-frontend-deploy.yml
+
+      - name: Wait for deployment rollout
+        run: kubectl rollout status deployment/ecommstorefrontend --timeout=90s
+
+      - name: Debug pod if rollout failed
+        if: failure()
+        run: |
+          kubectl get pods
+          kubectl describe pod $(kubectl get pods -l app=ecommstore -o jsonpath="{.items[0].metadata.name}")
