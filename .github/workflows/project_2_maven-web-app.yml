@@ -1,4 +1,4 @@
-name: Build Maven App, Push Docker to ECR, and Run
+name: Project_2_maven-web-app
 
 on:
   workflow_dispatch:
