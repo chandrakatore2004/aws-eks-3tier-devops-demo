@@ -13,7 +13,6 @@ jobs:
     env:
       AWS_REGION: ${{ secrets.AWS_REGION }}
       ECR_REPOSITORY: project_01_maven-web-app
-      ECR_REGISTRY: ${{ secrets.ECR_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
       IMAGE_TAG: ${{ github.run_id }}
 
     steps:
@@ -39,16 +38,18 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Login to Amazon ECR
+        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
       - name: Build Docker image
         run: |
-          docker build -t $ECR_REPOSITORY -f Project-2/Dockerfile Project-2/
+          IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}
+          docker build -t $IMAGE_URI:latest -f Project-2/Dockerfile Project-2/
 
-      - name: Tag and push Docker image to ECR
+      - name: Push Docker image to ECR
         run: |
-          docker tag $ECR_REPOSITORY:latest $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}
+          docker push $IMAGE_URI:latest
 
       - name: Stop previous container if exists
         run: |
@@ -57,10 +58,11 @@ jobs:
 
       - name: Run container on port 9090
         run: |
+          IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}
           docker run -d \
             --name $ECR_REPOSITORY \
             -p 9090:8080 \
-            $ECR_REGISTRY/$ECR_REPOSITORY:latest
+            $IMAGE_URI:latest
 
       - name: Verify container is running
         run: docker ps
