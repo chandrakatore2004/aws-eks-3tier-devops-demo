@@ -1,0 +1,52 @@
+name: project_2_maven-web-app
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-push-run:
+    runs-on: [self-hosted, linux, qa]
+
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      ECR_REPOSITORY: project_01_maven-web-app
+      ECR_REGISTRY: ${{ secrets.ECR_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+      IMAGE_TAG: ${{ github.run_id }}
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build Docker image
+        run: |
+          docker build -t $ECR_REPOSITORY .
+
+      - name: Tag and push Docker image to ECR
+        run: |
+          docker tag $ECR_REPOSITORY:latest $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+      - name: Stop previous container if exists
+        run: |
+          docker stop $ECR_REPOSITORY || true
+          docker rm $ECR_REPOSITORY || true
+
+      - name: Run container on port 9090
+        run: |
+          docker run -d \
+            --name $ECR_REPOSITORY \
+            -p 9090:8080 \
+            $ECR_REGISTRY/$ECR_REPOSITORY:latest
