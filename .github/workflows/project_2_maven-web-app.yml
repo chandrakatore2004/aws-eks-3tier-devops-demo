@@ -1,4 +1,4 @@
-name: project_2_maven-web-app
+name: Build Maven App, Push Docker to ECR, and Run
 
 on:
   workflow_dispatch:
@@ -12,13 +12,24 @@ jobs:
 
     env:
       AWS_REGION: ${{ secrets.AWS_REGION }}
-      ECR_REPOSITORY: project_01_maven-web-app
+      ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
       ECR_REGISTRY: ${{ secrets.ECR_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
       IMAGE_TAG: ${{ github.run_id }}
 
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
+
+      - name: Set up Java 17 for Maven
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build with Maven
+        run: |
+          cd Project-2
+          mvn clean package -DskipTests
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -32,7 +43,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t $ECR_REPOSITORY .
+          docker build -t $ECR_REPOSITORY -f Project-2/Dockerfile Project-2/
 
       - name: Tag and push Docker image to ECR
         run: |
@@ -50,3 +61,6 @@ jobs:
             --name $ECR_REPOSITORY \
             -p 9090:8080 \
             $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+      - name: Verify container is running
+        run: docker ps
