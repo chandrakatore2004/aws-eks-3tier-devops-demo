@@ -40,6 +40,20 @@ jobs:
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
           echo "IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY" >> $GITHUB_ENV
 
+      - name: Install Node.js dependencies and run tests with coverage
+        working-directory: app/frontend-src
+        run: |
+          npm install
+          npm run test -- --coverage
+
+      - name: SonarCloud Scan
+        uses: sonarsource/sonarqube-scan-action@v2
+        with:
+          projectBaseDir: app/frontend-src
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
       - name: Build Docker image
         working-directory: app/frontend-src
         run: |
