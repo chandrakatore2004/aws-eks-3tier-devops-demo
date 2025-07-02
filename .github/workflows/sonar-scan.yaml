@@ -1,4 +1,4 @@
-name: CI/CD workflow for SonarCloud Code Scan
+name: SonarCloud Code Scan workflow
 
 on:
   push:
