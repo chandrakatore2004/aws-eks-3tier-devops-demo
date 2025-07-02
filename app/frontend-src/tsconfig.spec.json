@@ -2,16 +2,14 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./out-tsc/spec",
-    "types": ["jest"],
-    "esModuleInterop": true
+    "types": ["jest", "node"]
   },
   "files": [
-    "setup-jest.ts"
-    "jest-preset-angular.d.ts"
+    "setup-jest.ts",
+    "jest-preset-angular-fix.d.ts"
   ],
   "include": [
     "src/**/*.spec.ts",
     "src/**/*.d.ts"
-    "jest-preset-angular.d.ts"
   ]
 }
