@@ -31,13 +31,15 @@ jobs:
             -Dsonar.projectKey=chandrakatore2004_aws-eks-3tier-devops-demo
             -Dsonar.organization=chandrakatore2004
          
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
 
       - name: SonarCloud Quality Gate check
         id: sonarcloud-quality-gate
         uses: sonarsource/sonarqube-quality-gate-action@master
+      
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
 
 
