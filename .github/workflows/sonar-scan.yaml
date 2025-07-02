@@ -40,12 +40,21 @@ jobs:
             -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
             -f Project-3/MyWebApp/pom.xml
 
+      - name: Copy report-task.txt to root (SonarCloud)
+        run: |
+          cp Project-3/MyWebApp/.scannerwork/report-task.txt report-task.txt
+
       - name: SonarCloud Quality Gate check
         id: sonarcloud-quality-gate
         uses: sonarsource/sonarqube-quality-gate-action@master
         with:
-          scanMetadataReportFile: .scannerwork/report-task.txt
+          scanMetadataReportFile: report-task.txt
           pollingTimeoutSec: 300
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        
+
+      - name: Fail if Quality Gate fails
+        if: steps.sonarcloud-quality-gate.outputs.quality_gate_status != 'PASSED'
+        run: |
+          echo "❌ SonarCloud Quality Gate failed!"
+          exit 1
