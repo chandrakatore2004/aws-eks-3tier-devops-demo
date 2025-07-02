@@ -48,4 +48,4 @@ jobs:
           pollingTimeoutSec: 300
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        working-directory: Project-3/MyWebApp
+        
