@@ -7,7 +7,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  sonarcloud:
+    name: SonarCloud Code Quality
     runs-on: [self-hosted, linux, qa]
 
     steps:
@@ -20,7 +21,7 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Cache Maven packages
+      - name: Cache Maven dependencies
         uses: actions/cache@v3
         with:
           path: ~/.m2
@@ -29,32 +30,28 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: Build with Maven
-        run: mvn clean install -f Project-3/MyWebApp/pom.xml
+        run: mvn clean install
+        working-directory: Project-3/MyWebApp
 
-      - name: Run SonarCloud Analysis
+      - name: Run SonarCloud Scan
         run: |
           mvn sonar:sonar \
             -Dsonar.projectKey=chandrakatore2004_aws-eks-3tier-devops-demo \
             -Dsonar.organization=chandrakatore2004 \
             -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
-            -f Project-3/MyWebApp/pom.xml
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+        working-directory: Project-3/MyWebApp
 
-      - name: Copy report-task.txt to root (SonarCloud)
-        run: |
-          cp Project-3/MyWebApp/.scannerwork/report-task.txt report-task.txt
-
-      - name: SonarCloud Quality Gate check
-        id: sonarcloud-quality-gate
+      - name: SonarCloud Quality Gate Check
         uses: sonarsource/sonarqube-quality-gate-action@master
         with:
-          scanMetadataReportFile: report-task.txt
+          scanMetadataReportFile: Project-3/MyWebApp/.scannerwork/report-task.txt
           pollingTimeoutSec: 300
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Fail if Quality Gate fails
-        if: steps.sonarcloud-quality-gate.outputs.quality_gate_status != 'PASSED'
+        if: steps.quality-gate.outputs.quality_gate_status != 'PASSED'
         run: |
-          echo "❌ SonarCloud Quality Gate failed!"
+          echo "SonarCloud Quality Gate failed!"
           exit 1
