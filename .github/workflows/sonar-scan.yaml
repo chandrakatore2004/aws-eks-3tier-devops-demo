@@ -44,7 +44,8 @@ jobs:
         id: sonarcloud-quality-gate
         uses: sonarsource/sonarqube-quality-gate-action@master
         with:
-          scanMetadataReportFile: Project-3/MyWebApp/.scannerwork/report-task.txt
+          scanMetadataReportFile: .scannerwork/report-task.txt
           pollingTimeoutSec: 300
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        working-directory: Project-3/MyWebApp
