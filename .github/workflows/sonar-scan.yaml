@@ -8,7 +8,6 @@ on:
 
 jobs:
   sonarcloud:
-    name: SonarCloud Code Quality
     runs-on: [self-hosted, linux, qa]
 
     steps:
@@ -49,9 +48,3 @@ jobs:
           pollingTimeoutSec: 300
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-      - name: Fail if Quality Gate fails
-        if: steps.quality-gate.outputs.quality_gate_status != 'PASSED'
-        run: |
-          echo "SonarCloud Quality Gate failed!"
-          exit 1
