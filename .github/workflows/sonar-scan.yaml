@@ -40,10 +40,10 @@ jobs:
             -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
             -f Project-3/MyWebApp/pom.xml
 
-      - name: SonarCloud Quality Gate check
+      - name: Check SonarCloud Quality Gate
         uses: sonarsource/sonarqube-quality-gate-action@master
         with:
-          scanMetadataReportFile: .scannerwork/report-task.txt
+          scanMetadataReportFile: Project-3/MyWebApp/.scannerwork/report-task.txt
           pollingTimeoutSec: 300
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
