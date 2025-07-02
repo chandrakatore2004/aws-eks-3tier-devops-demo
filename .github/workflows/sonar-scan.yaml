@@ -41,10 +41,13 @@ jobs:
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
         working-directory: Project-3/MyWebApp
 
+      - name: Copy report-task.txt to root for Quality Gate check
+        run: cp Project-3/MyWebApp/.scannerwork/report-task.txt report-task.txt
+
       - name: SonarCloud Quality Gate Check
         uses: sonarsource/sonarqube-quality-gate-action@master
         with:
-          scanMetadataReportFile: Project-3/MyWebApp/.scannerwork/report-task.txt
+          scanMetadataReportFile: report-task.txt
           pollingTimeoutSec: 300
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
