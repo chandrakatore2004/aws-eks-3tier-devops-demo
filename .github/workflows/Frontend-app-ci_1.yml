@@ -42,8 +42,7 @@ jobs:
 
       - name: Install Node.js dependencies and run tests with coverage
         working-directory: app/frontend-src
-        env:
-          CHROME_BIN: /usr/bin/google-chrome
+
         run: |
           npm install
           npm run test -- --code-coverage
