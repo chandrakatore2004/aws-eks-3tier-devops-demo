@@ -13,5 +13,5 @@ module.exports = {
     }
   },
   moduleFileExtensions: ['ts', 'html', 'js', 'json'],
-  transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)'],
+  transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)']
 };
