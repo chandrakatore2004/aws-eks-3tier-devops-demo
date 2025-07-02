@@ -29,25 +29,21 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: Build with Maven
-        run: mvn clean install
-        working-directory: Project-3/MyWebApp
+        run: mvn clean install -f Project-3/MyWebApp/pom.xml
 
-      - name: Run SonarCloud Scan
+      - name: Run SonarCloud Analysis
         run: |
           mvn sonar:sonar \
             -Dsonar.projectKey=chandrakatore2004_aws-eks-3tier-devops-demo \
             -Dsonar.organization=chandrakatore2004 \
             -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
-        working-directory: Project-3/MyWebApp
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
+            -f Project-3/MyWebApp/pom.xml
 
-      - name: Copy report-task.txt to root for Quality Gate check
-        run: cp Project-3/MyWebApp/.scannerwork/report-task.txt report-task.txt
-
-      - name: SonarCloud Quality Gate Check
+      - name: SonarCloud Quality Gate check
         uses: sonarsource/sonarqube-quality-gate-action@master
         with:
-          scanMetadataReportFile: report-task.txt
+          scanMetadataReportFile: .scannerwork/report-task.txt
           pollingTimeoutSec: 300
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
