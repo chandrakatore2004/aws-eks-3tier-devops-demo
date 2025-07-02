@@ -27,11 +27,12 @@ jobs:
 
       - name: SonarCloud Scan (via Maven plugin)
         working-directory: Project-3/MyWebApp
-        run: mvn sonar:sonar \
-          -Dsonar.projectKey=chandrakatore2004_aws-eks-3tier-devops-demo \
-          -Dsonar.organization=chandrakatore2004 \
-          -Dsonar.host.url=https://sonarcloud.io \
-          -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
+        run: >
+          mvn sonar:sonar 
+          -Dsonar.projectKey=chandrakatore2004_aws-eks-3tier-devops-demo 
+          -Dsonar.organization=chandrakatore2004 
+          -Dsonar.host.url=https://sonarcloud.io 
+          -Dsonar.login=${{ secrets.SONAR_TOKEN }} 
           -f Project-3/MyWebApp/pom.xml
 
       - name: SonarCloud Quality Gate check
