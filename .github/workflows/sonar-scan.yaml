@@ -30,22 +30,15 @@ jobs:
           args: >
             -Dsonar.projectKey=my-Java-web-app
             -Dsonar.organization=my-org
-            -Dsonar.java.binaries=target
+            -Dsonar.host.url=https://sonarcloud.io
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
       - name: SonarCloud Quality Gate check
         id: sonarcloud-quality-gate
         uses: sonarsource/sonarqube-quality-gate-action@master
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-      - name: Fail if Quality Gate fails
-        if: always()
-        run: |
-          if [ "${{ steps.sonarcloud-quality-gate.outputs.quality-gate-status }}" != "PASSED" ]; then
-            echo "❌ SonarCloud Quality Gate failed."
-            exit 1
-          else
-            echo "✅ SonarCloud Quality Gate passed."
-          fi
+
+
+  
