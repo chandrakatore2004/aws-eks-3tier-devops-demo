@@ -28,8 +28,8 @@ jobs:
         with:
           projectBaseDir: Project-3/MyWebApp
           args: >
-            -Dsonar.projectKey=my-Java-web-app
-            -Dsonar.organization=my-org
+            -Dsonar.projectKey=chandrakatore2004_aws-eks-3tier-devops-demo
+            -Dsonar.organization=chandrakatore2004
          
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
