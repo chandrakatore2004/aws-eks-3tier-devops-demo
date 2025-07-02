@@ -26,6 +26,7 @@ jobs:
         run: mvn clean install -f Project-3/MyWebApp/pom.xml
 
       - name: SonarCloud Scan (via Maven plugin)
+        working-directory: Project-3/MyWebApp
         run: mvn sonar:sonar \
           -Dsonar.projectKey=chandrakatore2004_aws-eks-3tier-devops-demo \
           -Dsonar.organization=chandrakatore2004 \
