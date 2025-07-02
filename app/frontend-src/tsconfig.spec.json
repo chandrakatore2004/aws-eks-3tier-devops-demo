@@ -7,9 +7,11 @@
   },
   "files": [
     "setup-jest.ts"
+    "jest-preset-angular.d.ts"
   ],
   "include": [
     "src/**/*.spec.ts",
     "src/**/*.d.ts"
+    "jest-preset-angular.d.ts"
   ]
 }
