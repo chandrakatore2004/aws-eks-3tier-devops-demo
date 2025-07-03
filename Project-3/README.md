@@ -5,14 +5,14 @@ This is a sample Java web application (`WAR` packaging) integrated with **SonarC
 ---
 
 ## Project folder Structure
-
+---
 Project-3/
 └── MyWebApp/
 ├── pom.xml # Maven config with Sonar plugin
 ├── src/main/java/ # Java source code
 ├── src/main/webapp/ # JSP / static content
 └── target/sonar/report-task.txt # SonarCloud metadata (for Quality Gate check)
-
+-------
 
 ---
 
