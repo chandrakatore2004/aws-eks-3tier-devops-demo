@@ -23,7 +23,7 @@ jobs:
       - name: Cache Maven dependencies
         uses: actions/cache@v3
         with:
-          path: ~/.m2 # Improves performance by caching
+          path: ~/.m2
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
@@ -38,12 +38,13 @@ jobs:
           mvn sonar:sonar \
             -Dsonar.projectKey=chandrakatore2004_aws-eks-3tier-devops-demo \
             -Dsonar.organization=chandrakatore2004 \
+            -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
       - name: SonarCloud Quality Gate check
         uses: sonarsource/sonarqube-quality-gate-action@master
         with:
           scanMetadataReportFile: Project-3/MyWebApp/target/sonar/report-task.txt
-          pollingTimeoutSec: 60
+          pollingTimeoutSec: 300
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
