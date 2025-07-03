@@ -20,25 +20,44 @@
   </properties>
 
   <dependencies>
+    <!-- JUnit for unit testing -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.13.2</version> <!-- ✅ Updated JUnit -->
+      <version>4.13.2</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
 
   <build>
     <finalName>MyWebApp</finalName>
+    
+    <!-- Explicitly specify source directory -->
+    <sourceDirectory>src/main/java</sourceDirectory>
+
     <plugins>
-      <!-- ✅ Modern WAR plugin -->
+      <!-- Compiler plugin -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.11.0</version>
+        <configuration>
+          <source>${maven.compiler.source}</source>
+          <target>${maven.compiler.target}</target>
+        </configuration>
+      </plugin>
+
+      <!-- WAR plugin -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>
         <version>3.4.0</version>
+        <configuration>
+          <failOnMissingWebXml>${failOnMissingWebXml}</failOnMissingWebXml>
+        </configuration>
       </plugin>
 
-      <!-- ✅ Sonar Maven plugin -->
+      <!-- SonarCloud plugin -->
       <plugin>
         <groupId>org.sonarsource.scanner.maven</groupId>
         <artifactId>sonar-maven-plugin</artifactId>
@@ -46,4 +65,5 @@
       </plugin>
     </plugins>
   </build>
+
 </project>
