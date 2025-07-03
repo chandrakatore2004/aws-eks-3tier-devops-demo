@@ -2,9 +2,7 @@ name: Project_2_maven-web-app
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - master
+
 
 jobs:
   build-push-run:
