@@ -38,7 +38,7 @@ jobs:
           mvn sonar:sonar \
             -Dsonar.projectKey=chandrakatore2004_aws-eks-3tier-devops-demo \
             -Dsonar.organization=chandrakatore2004 \
-            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
       - name: SonarCloud Quality Gate check
