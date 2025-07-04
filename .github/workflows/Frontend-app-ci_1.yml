@@ -48,6 +48,11 @@ jobs:
           projectBaseDir: app/frontend-src
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+       
+      - name: List generated Sonar reports
+        run: ls -R app/frontend-src/.scannerwork || echo "No scannerwork directory"
+        
+        
 
       - name: Wait for SonarCloud Quality Gate result
         run: |
