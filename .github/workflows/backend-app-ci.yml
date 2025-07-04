@@ -43,12 +43,15 @@ jobs:
           echo "IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY" >> $GITHUB_ENV
           echo "::set-output name=image_tag::$IMAGE_TAG"
 
-      - name: SonarCloud Static Code Scan
-        uses: SonarSource/sonarcloud-github-action@v2
-        with:
-          projectBaseDir: app/backend-src
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: SonarCloud scan with Maven
+        working-directory: app/backend-src
+        run: |
+            mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+              -Dsonar.projectKey=chandrakatore2004_ecommerce-backend \
+              -Dsonar.organization=chandrakatore2004 \
+              -Dsonar.host.url=https://sonarcloud.io \
+              -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+        
 
       - name: Wait for SonarCloud Quality Gate result
         continue-on-error: true
