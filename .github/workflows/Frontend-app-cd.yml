@@ -1,18 +1,15 @@
 name: Frontend CD Pipeline (EKS)
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'app/frontend-src/k8s/**'
   workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Docker Image Tag to deploy'
+        required: true
 
 env:
   AWS_REGION: ap-south-1
-  AWS_DEFAULT_REGION: ap-south-1
   ECR_REPOSITORY: ecommerce-frontend
-  SONAR_PROJECT_KEY: chandrakatore2004_aws-eks-3tier-devops-demo
 
 jobs:
   deploy-to-eks:
@@ -35,24 +32,13 @@ jobs:
             --region $AWS_REGION \
             --name ${{ secrets.AWS_SECRET_EKS_CLUSTER_NAME }}
 
-      - name: Compute image tag using Git SHA
-        run: |
-          SHORT_SHA=${GITHUB_SHA::7}
-          SAFE_REPO=$(echo "${GITHUB_REPOSITORY}" | tr '/' '-')
-          IMAGE_TAG="${SAFE_REPO}-${SHORT_SHA}"
-          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
-
-      - name: Render Kubernetes manifest with image tag
+      - name: Render Kubernetes manifest
         run: |
           ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
-          ECR_REGISTRY="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
-          FULL_IMAGE="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          FULL_IMAGE="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:${{ github.event.inputs.image_tag }}"
           export FULL_IMAGE
-          echo "Using image: $FULL_IMAGE"
+          echo "Deploying Image: $FULL_IMAGE"
           envsubst '${FULL_IMAGE}' < app/frontend-src/k8s/Deployment.yml > k8s-frontend-deploy.yml
-
-      - name: Print rendered manifest (debug)
-        run: cat k8s-frontend-deploy.yml
 
       - name: Deploy to EKS
         run: kubectl apply -f k8s-frontend-deploy.yml
