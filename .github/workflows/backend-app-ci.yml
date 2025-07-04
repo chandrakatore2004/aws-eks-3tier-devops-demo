@@ -46,6 +46,7 @@ jobs:
       - name: SonarCloud scan with Maven
         working-directory: app/backend-src
         run: |
+          chmod +x ./mvnw
           ./mvnw verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
             -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }} \
             -Dsonar.organization=chandrakatore2004 \
