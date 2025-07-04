@@ -50,11 +50,9 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Wait for SonarCloud Quality Gate result
-        continue-on-error: true
         working-directory: app/frontend-src
         run: |
           echo "Waiting for SonarCloud analysis to complete..."
-
           sleep 10
 
           if [[ ! -f .scannerwork/report-task.txt ]]; then
@@ -75,7 +73,6 @@ jobs:
             STATUS=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
               "https://sonarcloud.io/api/ce/task?id=$ANALYSIS_ID" \
               | jq -r '.task.status')
-
             echo "Status: $STATUS"
             [[ "$STATUS" == "SUCCESS" ]] && break
             sleep 10
@@ -85,15 +82,23 @@ jobs:
             "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${{ env.SONAR_PROJECT_KEY }}" \
             | jq -r '.projectStatus.status')
 
+          COVERAGE=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
+            "https://sonarcloud.io/api/measures/component?component=${{ env.SONAR_PROJECT_KEY }}&metricKeys=coverage" \
+            | jq -r '.component.measures[0].value')
+
           if [[ "$PROJECT_STATUS" == "null" || -z "$PROJECT_STATUS" ]]; then
             echo "ERROR: Unable to retrieve project quality gate status."
             exit 1
           fi
 
           echo "Quality Gate Status: $PROJECT_STATUS"
+          echo "Coverage: ${COVERAGE}%"
 
           if [[ "$PROJECT_STATUS" != "OK" ]]; then
             echo "Quality Gate failed"
+            if [[ "$COVERAGE" != "null" && $(echo "$COVERAGE < 80" | bc -l) -eq 1 ]]; then
+              echo "Code coverage is less than 80%: $COVERAGE%"
+            fi
             exit 1
           else
             echo "Quality Gate passed"
