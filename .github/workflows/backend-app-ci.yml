@@ -71,11 +71,11 @@ jobs:
         run: |
           echo "Waiting for SonarCloud analysis to complete..."
           sleep 10
-          if [[ ! -f .scannerwork/report-task.txt ]]; then
+          if [[ ! -f target/sonar/report-task.txt ]]; then
             echo "ERROR: report-task.txt not found."
             exit 1
           fi
-          ANALYSIS_ID=$(grep ceTaskId .scannerwork/report-task.txt | cut -d= -f2)
+          ANALYSIS_ID=$(grep ceTaskId target/sonar/report-task.txt | cut -d= -f2)
           if [[ -z "$ANALYSIS_ID" ]]; then
             echo "ERROR: Analysis ID not found."
             exit 1
