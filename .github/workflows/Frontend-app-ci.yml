@@ -1,4 +1,7 @@
 name: Frontend CI Pipeline
+permissions:
+  contents: read
+  actions: write
 
 on:
   push:
