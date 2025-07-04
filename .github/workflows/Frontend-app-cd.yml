@@ -34,10 +34,12 @@ jobs:
 
       - name: Render Kubernetes manifest
         run: |
+          IMAGE_TAG="${{ github.event.inputs.image_tag }}"
           ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
-          FULL_IMAGE="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:${{ github.event.inputs.image_tag }}"
+          ECR_REGISTRY="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
+          FULL_IMAGE="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          echo "Using image: $FULL_IMAGE"
           export FULL_IMAGE
-          echo "Deploying Image: $FULL_IMAGE"
           envsubst '${FULL_IMAGE}' < app/frontend-src/k8s/Deployment.yml > k8s-frontend-deploy.yml
 
       - name: Deploy to EKS
