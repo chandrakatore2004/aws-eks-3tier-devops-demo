@@ -1,23 +1,18 @@
 name: Frontend CD Pipeline (EKS)
 
 on:
-  workflow_dispatch:
-    inputs:
-      image_tag:
-        description: 'Image tag to deploy (e.g. chandrakatore2004-aws-eks-3tier-devops-demo-abc1234)'
-        required: true
   push:
     branches:
       - master
     paths:
       - 'app/frontend-src/k8s/**'
+  workflow_dispatch:
 
 env:
   AWS_REGION: ap-south-1
   AWS_DEFAULT_REGION: ap-south-1
   ECR_REPOSITORY: ecommerce-frontend
   SONAR_PROJECT_KEY: chandrakatore2004_aws-eks-3tier-devops-demo
-  IMAGE_TAG: ${{ github.event.inputs.image_tag }}
 
 jobs:
   deploy-to-eks:
@@ -40,7 +35,14 @@ jobs:
             --region $AWS_REGION \
             --name ${{ secrets.AWS_SECRET_EKS_CLUSTER_NAME }}
 
-      - name: Render Kubernetes manifest with correct image
+      - name: Compute image tag using Git SHA
+        run: |
+          SHORT_SHA=${GITHUB_SHA::7}
+          SAFE_REPO=$(echo "${GITHUB_REPOSITORY}" | tr '/' '-')
+          IMAGE_TAG="${SAFE_REPO}-${SHORT_SHA}"
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Render Kubernetes manifest with image tag
         run: |
           ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
           ECR_REGISTRY="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
