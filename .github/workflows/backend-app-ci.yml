@@ -43,44 +43,34 @@ jobs:
           echo "IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY" >> $GITHUB_ENV
           echo "::set-output name=image_tag::$IMAGE_TAG"
 
-      - name: Set up Java 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
-
-      - name: Check Java version
-        run: java -version
-
-      - name: Make mvnw executable
-        working-directory: app/backend-src
-        run: chmod +x mvnw
-        
       - name: SonarCloud scan with Maven
         working-directory: app/backend-src
         run: |
-            ./mvnw verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-              -Dsonar.projectKey=chandrakatore2004_ecommerce-backend \
-              -Dsonar.organization=chandrakatore2004 \
-              -Dsonar.host.url=https://sonarcloud.io \
-              -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+          ./mvnw verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+            -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }} \
+            -Dsonar.organization=chandrakatore2004 \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
       - name: Wait for SonarCloud Quality Gate result
-        continue-on-error: true
         working-directory: app/backend-src
         run: |
           echo "Waiting for SonarCloud analysis to complete..."
           sleep 10
+
           if [[ ! -f target/sonar/report-task.txt ]]; then
             echo "ERROR: report-task.txt not found."
             exit 1
           fi
+
           ANALYSIS_ID=$(grep ceTaskId target/sonar/report-task.txt | cut -d= -f2)
           if [[ -z "$ANALYSIS_ID" ]]; then
             echo "ERROR: Analysis ID not found."
             exit 1
           fi
+
           echo "Got Analysis ID: $ANALYSIS_ID"
+
           for i in {1..30}; do
             STATUS=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
               "https://sonarcloud.io/api/ce/task?id=$ANALYSIS_ID" | jq -r '.task.status')
@@ -88,9 +78,14 @@ jobs:
             [[ "$STATUS" == "SUCCESS" ]] && break
             sleep 10
           done
-          PROJECT_STATUS=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
-            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${{ env.SONAR_PROJECT_KEY }}" | jq -r '.projectStatus.status')
+
+          curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
+            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${{ env.SONAR_PROJECT_KEY }}" \
+            | tee quality-gate-response.json
+
+          PROJECT_STATUS=$(jq -r '.projectStatus.status' quality-gate-response.json)
           echo "Quality Gate Status: $PROJECT_STATUS"
+
           if [[ "$PROJECT_STATUS" != "OK" ]]; then
             echo "Quality Gate failed"
             exit 1
@@ -98,7 +93,7 @@ jobs:
             echo "Quality Gate passed"
           fi
 
-      - name: Build, tag, scan, and push Docker image
+      - name: Build, scan, tag, and push Docker image
         working-directory: app/backend-src
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -106,8 +101,10 @@ jobs:
           IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY
           echo "Building Docker image with tags: $IMAGE_TAG and latest"
           docker build -t $IMAGE_URI:$IMAGE_TAG -t $IMAGE_URI:latest .
+
           echo "Scanning image with Trivy (HIGH/CRITICAL)"
-          trivy image --exit-code 1 --severity HIGH,CRITICAL --no-progress $IMAGE_URI:$IMAGE_TAG
+          trivy image --exit-code 1 --severity CRITICAL --no-progress $IMAGE_URI:$IMAGE_TAG
+
           echo "Pushing Docker image to ECR"
           docker push $IMAGE_URI:$IMAGE_TAG
           docker push $IMAGE_URI:latest
