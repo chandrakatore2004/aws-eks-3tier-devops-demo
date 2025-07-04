@@ -48,24 +48,23 @@ jobs:
           projectBaseDir: app/frontend-src
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-       
-      - name: List generated Sonar reports
-        run: ls -R app/frontend-src/.scannerwork || echo "No scannerwork directory"
-        
-        
 
       - name: Wait for SonarCloud Quality Gate result
+        working-directory: app/frontend-src
         run: |
           echo "Waiting for SonarCloud analysis to complete..."
 
           sleep 10
 
-          ANALYSIS_ID=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
-            "https://sonarcloud.io/api/ce/component?component=${{ env.SONAR_PROJECT_KEY }}" \
-            | jq -r '.queue[0].id')
+          if [[ ! -f .scannerwork/report-task.txt ]]; then
+            echo "ERROR: Sonar scan report-task.txt not found. Scan may have failed."
+            exit 1
+          fi
 
-          if [[ "$ANALYSIS_ID" == "null" || -z "$ANALYSIS_ID" ]]; then
-            echo "ERROR: No analysis ID found. Sonar scan may have failed."
+          ANALYSIS_ID=$(grep ceTaskId .scannerwork/report-task.txt | cut -d= -f2)
+
+          if [[ -z "$ANALYSIS_ID" ]]; then
+            echo "ERROR: Analysis ID not found in report-task.txt"
             exit 1
           fi
 
@@ -99,7 +98,7 @@ jobs:
             echo "Quality Gate passed"
           fi
 
-      - name: Build, tag, and push Docker image to ECR
+      - name: Build, tag, scan, and push Docker image to ECR
         working-directory: app/frontend-src
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
