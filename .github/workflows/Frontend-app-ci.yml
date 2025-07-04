@@ -122,6 +122,5 @@ jobs:
           workflow: Frontend CD Pipeline (EKS)
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: master
-          inputs: |
-            inputs: '{"image_tag": "${{ steps.meta.outputs.image_tag }}"}'
+          inputs: '{"image_tag": "${{ steps.meta.outputs.image_tag }}"}'
 
