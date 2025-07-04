@@ -12,7 +12,6 @@ env:
   AWS_REGION: ap-south-1
   AWS_DEFAULT_REGION: ap-south-1
   ECR_REPOSITORY: ecommerce-frontend
-  SONAR_ORGANIZATION: chandrakatore2004
   SONAR_PROJECT_KEY: chandrakatore2004_aws-eks-3tier-devops-demo
 
 jobs:
@@ -54,17 +53,24 @@ jobs:
         run: |
           echo "Waiting for SonarCloud analysis to complete..."
 
+          sleep 10
+
           ANALYSIS_ID=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
             "https://sonarcloud.io/api/ce/component?component=${{ env.SONAR_PROJECT_KEY }}" \
             | jq -r '.queue[0].id')
 
+          if [[ "$ANALYSIS_ID" == "null" || -z "$ANALYSIS_ID" ]]; then
+            echo "ERROR: No analysis ID found. Sonar scan may have failed."
+            exit 1
+          fi
+
           echo "Got Analysis ID: $ANALYSIS_ID"
-          sleep 10
 
           for i in {1..30}; do
             STATUS=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
               "https://sonarcloud.io/api/ce/task?id=$ANALYSIS_ID" \
               | jq -r '.task.status')
+
             echo "Status: $STATUS"
             [[ "$STATUS" == "SUCCESS" ]] && break
             sleep 10
@@ -73,6 +79,11 @@ jobs:
           PROJECT_STATUS=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
             "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${{ env.SONAR_PROJECT_KEY }}" \
             | jq -r '.projectStatus.status')
+
+          if [[ "$PROJECT_STATUS" == "null" || -z "$PROJECT_STATUS" ]]; then
+            echo "ERROR: Unable to retrieve project quality gate status."
+            exit 1
+          fi
 
           echo "Quality Gate Status: $PROJECT_STATUS"
 
@@ -83,19 +94,18 @@ jobs:
             echo "Quality Gate passed"
           fi
 
-      - name: Build Docker image
+      - name: Build, tag, and push Docker image to ECR
         working-directory: app/frontend-src
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
-          echo "Building image: $IMAGE_URI:$IMAGE_TAG"
+          IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY
+          echo "Building Docker image with tags: $IMAGE_TAG and latest"
           docker build -t $IMAGE_URI:$IMAGE_TAG -t $IMAGE_URI:latest .
 
-      - name: Scan Docker image with Trivy (fail on HIGH/CRITICAL)
-        run: |
-          echo "Scanning image with Trivy: $IMAGE_URI:$IMAGE_TAG"
+          echo "Scanning image with Trivy (HIGH/CRITICAL)"
           trivy image --exit-code 1 --severity HIGH,CRITICAL --no-progress $IMAGE_URI:$IMAGE_TAG
 
-      - name: Push Docker image to ECR
-        run: |
-          echo "Pushing image to ECR..."
+          echo "Pushing Docker image to ECR"
           docker push $IMAGE_URI:$IMAGE_TAG
           docker push $IMAGE_URI:latest
