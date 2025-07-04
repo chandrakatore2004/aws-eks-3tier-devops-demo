@@ -52,6 +52,10 @@ jobs:
       - name: Check Java version
         run: java -version
 
+      - name: Make mvnw executable
+        working-directory: app/backend-src
+        run: chmod +x mvnw
+        
       - name: SonarCloud scan with Maven
         working-directory: app/backend-src
         run: |
