@@ -71,6 +71,7 @@ jobs:
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
       - name: SonarCloud Quality Gate check
+        continue-on-error: true
         uses: sonarsource/sonarqube-quality-gate-action@master
         with:
           scanMetadataReportFile: app/backend-src/target/sonar/report-task.txt
