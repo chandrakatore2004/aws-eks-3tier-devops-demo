@@ -1,19 +1,19 @@
 name: Backend CD Pipeline (EKS)
+
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - master
-    paths:
-      - 'app/backend-src/k8s/**'
+    inputs:
+      image_tag:
+        description: 'Docker Image Tag to deploy'
+        required: true
+
+env:
+  AWS_REGION: ap-south-1
+  ECR_REPOSITORY: ecommerce-backend
 
 jobs:
   deploy-to-eks:
     runs-on: [self-hosted, linux, qa]
-    env:
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      ECR_REPOSITORY: ecommerce-backend
-      EKS_CLUSTER_NAME: ${{ secrets.AWS_SECRET_EKS_CLUSTER_NAME }}
 
     steps:
       - name: Checkout source
@@ -24,29 +24,30 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Set up kubeconfig for EKS
         run: |
           aws eks update-kubeconfig \
             --region $AWS_REGION \
-            --name $EKS_CLUSTER_NAME
+            --name ${{ secrets.AWS_SECRET_EKS_CLUSTER_NAME }}
 
       - name: Render Kubernetes manifest
         run: |
-          export IMAGE_TAG=latest
-          export ECR_REGISTRY=$(aws sts get-caller-identity --query 'Account' --output text).dkr.ecr.$AWS_REGION.amazonaws.com
-          export FULL_IMAGE="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-          envsubst < app/backend-src/k8s/Deployment.yml > k8s-deploy.yml
+          ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
+          FULL_IMAGE="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:${{ github.event.inputs.image_tag }}"
+          export FULL_IMAGE
+          echo "Deploying Image: $FULL_IMAGE"
+          envsubst '${FULL_IMAGE}' < app/backend-src/k8s/Deployment.yml > k8s-backend-deploy.yml
 
       - name: Deploy to EKS
-        run: kubectl apply -f k8s-deploy.yml
+        run: kubectl apply -f k8s-backend-deploy.yml
 
       - name: Wait for deployment rollout
-        run: kubectl rollout status deployment/productsapideployment --timeout=90s
+        run: kubectl rollout status deployment=ecommstorebackend --timeout=90s
 
       - name: Debug pod if rollout failed
         if: failure()
         run: |
           kubectl get pods
-          kubectl describe pod $(kubectl get pods -l app=products -o jsonpath="{.items[0].metadata.name}")
+          kubectl describe pod $(kubectl get pods -l app=ecommbackend -o jsonpath="{.items[0].metadata.name}")
