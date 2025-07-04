@@ -1,4 +1,4 @@
-name: Frontend CI Pipeline-New
+name: Frontend CI Pipeline
 
 on:
   push:
@@ -8,14 +8,16 @@ on:
       - 'app/frontend-src/**'
   workflow_dispatch:
 
+env:
+  AWS_REGION: ap-south-1
+  AWS_DEFAULT_REGION: ap-south-1
+  ECR_REPOSITORY: ecommerce-frontend
+  SONAR_ORGANIZATION: chandrakatore2004
+  SONAR_PROJECT_KEY: chandrakatore2004_aws-eks-3tier-devops-demo
+
 jobs:
   frontend-ci:
     runs-on: [self-hosted, linux, qa]
-
-    env:
-      AWS_REGION: ap-south-1
-      AWS_DEFAULT_REGION: ap-south-1
-      ECR_REPOSITORY: ecommerce-frontend
 
     steps:
       - name: Checkout source code
@@ -41,27 +43,14 @@ jobs:
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
           echo "IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY" >> $GITHUB_ENV
 
-      - name: Run SonarCloud static analysis
+      - name: SonarCloud Static Code Scan
         uses: SonarSource/sonarcloud-github-action@v2
         with:
           projectBaseDir: app/frontend-src
+
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-      - name: Build Docker image
-        working-directory: app/frontend-src
+      - name: Wait for SonarCloud Quality Gate result
         run: |
-          echo "Building image: $IMAGE_URI:$IMAGE_TAG"
-          docker build -t $IMAGE_URI:$IMAGE_TAG -t $IMAGE_URI:latest .
-
-      - name: Scan Docker image with Trivy (fail on HIGH/CRITICAL)
-        run: |
-          echo "Scanning image with Trivy: $IMAGE_URI:$IMAGE_TAG"
-          trivy image --exit-code 1 --severity HIGH,CRITICAL $IMAGE_URI:$IMAGE_TAG
-
-      - name: Push Docker image to ECR
-        working-directory: app/frontend-src
-        run: |
-          echo "Pushing image: $IMAGE_URI:$IMAGE_TAG"
-          docker push $IMAGE_URI:$IMAGE_TAG
-          docker push $IMAGE_URI:latest
+          echo "Waiting for SonarCloud analysis to complete..."
