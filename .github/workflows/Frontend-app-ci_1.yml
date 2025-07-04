@@ -47,10 +47,55 @@ jobs:
         uses: SonarSource/sonarcloud-github-action@v2
         with:
           projectBaseDir: app/frontend-src
-
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Wait for SonarCloud Quality Gate result
         run: |
           echo "Waiting for SonarCloud analysis to complete..."
+
+          ANALYSIS_ID=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
+            "https://sonarcloud.io/api/ce/component?component=${{ env.SONAR_PROJECT_KEY }}" \
+            | jq -r '.queue[0].id')
+
+          echo "Got Analysis ID: $ANALYSIS_ID"
+          sleep 10
+
+          for i in {1..30}; do
+            STATUS=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
+              "https://sonarcloud.io/api/ce/task?id=$ANALYSIS_ID" \
+              | jq -r '.task.status')
+            echo "Status: $STATUS"
+            [[ "$STATUS" == "SUCCESS" ]] && break
+            sleep 10
+          done
+
+          PROJECT_STATUS=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
+            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${{ env.SONAR_PROJECT_KEY }}" \
+            | jq -r '.projectStatus.status')
+
+          echo "Quality Gate Status: $PROJECT_STATUS"
+
+          if [[ "$PROJECT_STATUS" != "OK" ]]; then
+            echo "Quality Gate failed"
+            exit 1
+          else
+            echo "Quality Gate passed"
+          fi
+
+      - name: Build Docker image
+        working-directory: app/frontend-src
+        run: |
+          echo "Building image: $IMAGE_URI:$IMAGE_TAG"
+          docker build -t $IMAGE_URI:$IMAGE_TAG -t $IMAGE_URI:latest .
+
+      - name: Scan Docker image with Trivy (fail on HIGH/CRITICAL)
+        run: |
+          echo "Scanning image with Trivy: $IMAGE_URI:$IMAGE_TAG"
+          trivy image --exit-code 1 --severity HIGH,CRITICAL --no-progress $IMAGE_URI:$IMAGE_TAG
+
+      - name: Push Docker image to ECR
+        run: |
+          echo "Pushing image to ECR..."
+          docker push $IMAGE_URI:$IMAGE_TAG
+          docker push $IMAGE_URI:latest
