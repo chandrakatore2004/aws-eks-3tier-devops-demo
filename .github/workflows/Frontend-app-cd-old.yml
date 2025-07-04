@@ -1,4 +1,4 @@
-name: Frontend CD Pipeline (EKS)
+name: Frontend CD Pipeline (EKS)- Old Version
 
 on:
   workflow_dispatch:
