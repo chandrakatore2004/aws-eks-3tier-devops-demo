@@ -123,4 +123,5 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: master
           inputs: |
-            image_tag: ${{ steps.meta.outputs.image_tag }}
+            inputs: '{"image_tag": "${{ steps.meta.outputs.image_tag }}"}'
+
