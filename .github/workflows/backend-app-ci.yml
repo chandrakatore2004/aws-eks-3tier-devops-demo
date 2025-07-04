@@ -49,56 +49,34 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: SonarCloud scan with Maven
+      - name: Cache Maven dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Build with Maven
+        working-directory: app/backend-src
+        run: mvn clean install
+
+      - name: Run SonarCloud Analysis
         working-directory: app/backend-src
         run: |
-          chmod +x ./mvnw
-          ./mvnw verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+          mvn sonar:sonar \
             -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }} \
             -Dsonar.organization=chandrakatore2004 \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
-      - name: Wait for SonarCloud Quality Gate result
-        working-directory: app/backend-src
-        run: |
-          echo "Waiting for SonarCloud analysis to complete..."
-          sleep 10
-
-          if [[ ! -f target/sonar/report-task.txt ]]; then
-            echo "ERROR: report-task.txt not found."
-            exit 1
-          fi
-
-          ANALYSIS_ID=$(grep ceTaskId target/sonar/report-task.txt | cut -d= -f2)
-          if [[ -z "$ANALYSIS_ID" ]]; then
-            echo "ERROR: Analysis ID not found."
-            exit 1
-          fi
-
-          echo "Got Analysis ID: $ANALYSIS_ID"
-
-          for i in {1..30}; do
-            STATUS=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
-              "https://sonarcloud.io/api/ce/task?id=$ANALYSIS_ID" | jq -r '.task.status')
-            echo "Status: $STATUS"
-            [[ "$STATUS" == "SUCCESS" ]] && break
-            sleep 10
-          done
-
-          curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
-            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${{ env.SONAR_PROJECT_KEY }}" \
-            | tee quality-gate-response.json
-
-          PROJECT_STATUS=$(jq -r '.projectStatus.status' quality-gate-response.json)
-          echo "Quality Gate Status: $PROJECT_STATUS"
-
-          if [[ "$PROJECT_STATUS" != "OK" ]]; then
-            echo "Quality Gate failed"
-            exit 1
-          else
-            echo "Quality Gate passed"
-          fi
+      - name: SonarCloud Quality Gate check
+        uses: sonarsource/sonarqube-quality-gate-action@master
+        with:
+          scanMetadataReportFile: app/backend-src/target/sonar/report-task.txt
+          pollingTimeoutSec: 300
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Build, scan, tag, and push Docker image
         working-directory: app/backend-src
