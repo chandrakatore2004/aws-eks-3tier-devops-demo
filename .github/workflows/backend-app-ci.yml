@@ -12,7 +12,7 @@ env:
   AWS_REGION: ap-south-1
   AWS_DEFAULT_REGION: ap-south-1
   ECR_REPOSITORY: ecommerce-backend
-  SONAR_PROJECT_KEY: chandrakatore2004_ecommerce-backend
+  SONAR_PROJECT_KEY: chandrakatore2004_aws-eks-3tier-devops-demo
 
 jobs:
   backend-ci:
