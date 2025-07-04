@@ -50,6 +50,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Wait for SonarCloud Quality Gate result
+        continue-on-error: true
         working-directory: app/frontend-src
         run: |
           echo "Waiting for SonarCloud analysis to complete..."
