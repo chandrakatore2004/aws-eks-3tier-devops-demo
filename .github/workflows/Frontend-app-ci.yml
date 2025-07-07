@@ -70,5 +70,4 @@ jobs:
           workflow: Frontend CD Pipeline (EKS)
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           ref: main
-          inputs: |
-            inputs: '{"image_tag": "${{ env.IMAGE_TAG }}"}'
+          inputs: '{"image_tag": "${{ env.IMAGE_TAG }}"}'
