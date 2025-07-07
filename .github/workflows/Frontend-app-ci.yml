@@ -68,6 +68,6 @@ jobs:
         uses: benc-uk/workflow-dispatch@v1
         with:
           workflow: Frontend CD Pipeline (EKS)
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           ref: main
           inputs: '{"image_tag": "${{ env.IMAGE_TAG }}"}'
