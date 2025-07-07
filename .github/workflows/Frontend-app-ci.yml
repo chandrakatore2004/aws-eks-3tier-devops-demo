@@ -71,4 +71,4 @@ jobs:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           ref: main
           inputs: |
-            image_tag: ${{ env.IMAGE_TAG }}
+            inputs: '{"image_tag": "${{ env.IMAGE_TAG }}"}'
