@@ -4,7 +4,7 @@ name: Frontend CI Pipeline
 on:
   push:
     branches:
-      - main
+      - master
     paths:
       - 'app/frontend-src/**'
   workflow_dispatch:
@@ -69,5 +69,5 @@ jobs:
         with:
           workflow: Frontend CD Pipeline (EKS)
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          ref: main
+          ref: master
           inputs: '{"image_tag": "${{ env.IMAGE_TAG }}"}'
