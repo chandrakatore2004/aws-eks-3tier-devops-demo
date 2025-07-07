@@ -1,0 +1,129 @@
+name: Frontend CI Pipeline
+permissions:
+  contents: read
+  actions: write
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'app/frontend-src/**'
+  workflow_dispatch:
+
+env:
+  AWS_REGION: ap-south-1
+  AWS_DEFAULT_REGION: ap-south-1
+  ECR_REPOSITORY: ecommerce-frontend
+  SONAR_PROJECT_KEY: chandrakatore2004_aws-eks-3tier-devops-demo
+
+jobs:
+  frontend-ci:
+    runs-on: [self-hosted, linux, qa]
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Set image tag variables
+        id: meta
+        run: |
+          SHORT_SHA=${GITHUB_SHA::7}
+          SAFE_REPO=$(echo "${GITHUB_REPOSITORY}" | tr '/' '-')
+          IMAGE_TAG="${SAFE_REPO}-${SHORT_SHA}"
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+          echo "IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY" >> $GITHUB_ENV
+          echo "::set-output name=image_tag::$IMAGE_TAG"
+
+      - name: SonarCloud Static Code Scan
+        uses: SonarSource/sonarcloud-github-action@v2
+        with:
+          projectBaseDir: app/frontend-src
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Wait for SonarCloud Quality Gate result
+        continue-on-error: true
+        working-directory: app/frontend-src
+        run: |
+          echo "Waiting for SonarCloud analysis to complete..."
+
+          sleep 10
+
+          if [[ ! -f .scannerwork/report-task.txt ]]; then
+            echo "ERROR: Sonar scan report-task.txt not found. Scan may have failed."
+            exit 1
+          fi
+
+          ANALYSIS_ID=$(grep ceTaskId .scannerwork/report-task.txt | cut -d= -f2)
+
+          if [[ -z "$ANALYSIS_ID" ]]; then
+            echo "ERROR: Analysis ID not found in report-task.txt"
+            exit 1
+          fi
+
+          echo "Got Analysis ID: $ANALYSIS_ID"
+
+          for i in {1..30}; do
+            STATUS=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
+              "https://sonarcloud.io/api/ce/task?id=$ANALYSIS_ID" \
+              | jq -r '.task.status')
+
+            echo "Status: $STATUS"
+            [[ "$STATUS" == "SUCCESS" ]] && break
+            sleep 10
+          done
+
+          PROJECT_STATUS=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
+            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${{ env.SONAR_PROJECT_KEY }}" \
+            | jq -r '.projectStatus.status')
+
+          if [[ "$PROJECT_STATUS" == "null" || -z "$PROJECT_STATUS" ]]; then
+            echo "ERROR: Unable to retrieve project quality gate status."
+            exit 1
+          fi
+
+          echo "Quality Gate Status: $PROJECT_STATUS"
+
+          if [[ "$PROJECT_STATUS" != "OK" ]]; then
+            echo "Quality Gate failed"
+            exit 1
+          else
+            echo "Quality Gate passed"
+          fi
+
+      - name: Build, tag, scan, and push Docker image to ECR
+        working-directory: app/frontend-src
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY
+          echo "Building Docker image with tags: $IMAGE_TAG and latest"
+          docker build -t $IMAGE_URI:$IMAGE_TAG -t $IMAGE_URI:latest .
+
+          echo "Scanning image with Trivy (HIGH/CRITICAL)"
+          trivy image --exit-code 1 --severity HIGH,CRITICAL --no-progress $IMAGE_URI:$IMAGE_TAG
+
+          echo "Pushing Docker image to ECR"
+          docker push $IMAGE_URI:$IMAGE_TAG
+          docker push $IMAGE_URI:latest
+
+      - name: Trigger CD Workflow
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: Frontend CD Pipeline (EKS)
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: master
+          inputs: '{"image_tag": "${{ steps.meta.outputs.image_tag }}"}'
+
