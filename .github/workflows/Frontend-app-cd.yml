@@ -29,9 +29,7 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ env.AWS_REGION }}
     
-      - name: Debug AWS identity
-        run: aws sts get-caller-identity
-        
+
           
       - name: Verify AWS Identity
         run: aws sts get-caller-identity
