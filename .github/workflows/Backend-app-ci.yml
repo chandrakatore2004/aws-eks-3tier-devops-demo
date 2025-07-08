@@ -104,4 +104,7 @@ jobs:
           workflow: Backend-app-cd.yml
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           ref: master
-          inputs: '{"image_tag": "${{ steps.meta.outputs.image_tag }}"}'
+          inputs: |
+              image_tag: ${{ steps.meta.outputs.image_tag }}
+
+          
