@@ -101,7 +101,7 @@ jobs:
       - name: Trigger CD Workflow
         uses: benc-uk/workflow-dispatch@v1
         with:
-          workflow: Backend CD Pipeline (EKS)
+          workflow: Backend-app-cd.yml
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          ref: main
+          ref: master
           inputs: '{"image_tag": "${{ steps.meta.outputs.image_tag }}"}'
