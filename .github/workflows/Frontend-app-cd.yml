@@ -52,7 +52,7 @@ jobs:
         run: kubectl apply -f k8s-frontend-deploy.yml
 
       - name: Wait for deployment rollout
-        run: kubectl rollout status deployment=ecommstorefrontend --timeout=90s
+        run: kubectl rollout status deployment/ecommstorefrontend --timeout=90s
 
       - name: Debug pod if rollout failed
         if: failure()
