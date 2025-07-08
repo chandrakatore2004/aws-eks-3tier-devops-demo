@@ -1,5 +1,8 @@
 # ✅ Frontend CD Pipeline (EKS)
 name: Frontend CD Pipeline (EKS)
+permissions:
+  id-token: write
+  contents: read
 
 on:
   workflow_dispatch:
