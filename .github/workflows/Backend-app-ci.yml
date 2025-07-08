@@ -96,7 +96,7 @@ jobs:
 
           echo "Pushing Docker image to ECR"
           docker push $IMAGE_URI:$IMAGE_TAG
-          docker push $IMAGE_URI:latest
+          
 
       - name: Trigger CD Workflow
         uses: benc-uk/workflow-dispatch@v1
