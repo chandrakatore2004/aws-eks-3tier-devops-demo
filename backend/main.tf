@@ -3,7 +3,8 @@ provider "aws" {
 }
 
 resource "aws_s3_bucket" "terraform_state" {
-  bucket = "chandra-terraform-eks-state-s3-bucket"
+  #bucket = "chandra-terraform-eks-state-s3-bucket"
+  bucket = "ck-terraform-eks-state-s3-bucket"
 
   lifecycle {
     prevent_destroy = false
