@@ -106,6 +106,4 @@ jobs:
           ref: master
           inputs: '{"image_tag": "${{ steps.meta.outputs.image_tag }}"}'
 
-
-
-          
+         
