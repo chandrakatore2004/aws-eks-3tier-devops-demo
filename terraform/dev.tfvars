@@ -17,7 +17,7 @@ public_subnet_cidrs = [
 ]
 
 cluster_name    = "my-eks-cluster"
-cluster_version = "1.30"
+cluster_version = "1.31"
 
 node_groups = {
   general = {
