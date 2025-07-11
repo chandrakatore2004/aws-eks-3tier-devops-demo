@@ -8,63 +8,7 @@ DevOps Project Setup (3 Tier)
 2) Backend (Java SpringBoot)
 
 3) Frontend (Angular)
-
-
-------------------
-aws-eks-3tier-devops-demo/
-├── .github/
-│   └── workflows/                # All GitHub Action workflows
-│       ├── Backend-app-ci.yml
-│       ├── Backend-app-cd.yml
-│       ├── Frontend-app-ci.yml
-│       ├── Frontend-app-cd.yml
-│       ├── infra-terraform.yml
-│       ├── Mysql-table.yml
-│       ├── sonar-scan.yaml
-│       └── project_2_maven-web-app.yml
-├── app/
-│   ├── backend-src/             # Spring Boot backend
-│   │   ├── Dockerfile
-│   │   ├── pom.xml
-│   │   ├── k8s/
-│   │   └── src/
-│   └── frontend-src/            # Angular frontend
-│       ├── Dockerfile
-│       ├── helm-values.yaml
-│       ├── angular.json
-│       └── src/
-├── backend/                     # Terraform backend state (legacy or alt)
-│   ├── main.tf
-│   └── terraform.tfstate
-├── db/
-│   └── DB_Queries.sql
-├── helm/                        # Helm charts
-│   ├── backend/
-│   ├── frontend/
-│   └── mysql/
-├── monitoring/                 # Monitoring stack (Prometheus/Grafana)
-│   ├── alerts/
-│   └── prometheus-grafana/
-├── Project-2/                  # Maven Web App Project 2
-│   ├── Dockerfile
-│   └── src/
-├── Project-3/                  # Maven Web App Project 3
-│   └── MyWebApp/
-│       ├── pom.xml
-│       └── src/
-├── terraform/                  # Main IaC for EKS, VPC, RDS
-│   ├── dev.tfvars
-│   ├── main.tf
-│   ├── output.tf
-│   ├── variables.tf
-│   └── modules/
-│       ├── eks/
-│       ├── vpc/
-│       └── rds/
-├── .gitignore
-└── README.md
----------------------------------
-
+--------
 
 DB Setup
 
