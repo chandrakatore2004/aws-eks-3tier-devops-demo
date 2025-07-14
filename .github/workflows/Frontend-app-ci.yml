@@ -1,29 +1,39 @@
-# ✅ Frontend CI Workflow with OIDC, Trivy, SHA tagging
 name: Frontend CI Pipeline
 
 on:
   push:
     branches:
-      - master
+      - main
+      - develop
     paths:
       - 'app/frontend-src/**'
   workflow_dispatch:
 
-env:
-  AWS_REGION: ap-south-1
-  ECR_REPOSITORY: ecommerce-frontend
-
 permissions:
   id-token: write
   contents: read
+  actions: write
+
+env:
+  AWS_REGION: ap-south-1
+  ECR_REPOSITORY: ecommerce-frontend
+  DEPLOY_NAMESPACE: develop
 
 jobs:
-  build-and-scan:
+  frontend-ci:
     runs-on: [self-hosted, linux, qa]
 
     steps:
-      - name: Checkout code
+      - name: Checkout source
         uses: actions/checkout@v4
+
+      - name: Set deployment namespace
+        run: |
+          if [[ "${GITHUB_REF##*/}" == "develop" ]]; then
+            echo "DEPLOY_NAMESPACE=develop" >> $GITHUB_ENV
+          else
+            echo "DEPLOY_NAMESPACE=default" >> $GITHUB_ENV
+          fi
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v2
@@ -31,43 +41,37 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Install Node and dependencies
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build frontend app
-        working-directory: app/frontend-src
+      - name: Set image tag
+        id: meta
         run: |
-          npm ci
-          npm run build
-
-      - name: Create Docker image
-        working-directory: app/frontend-src
-        run: |
-          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          REPO_SANITIZED=$(echo "${{ github.repository }}" | tr '/' '-')
-          IMAGE_TAG="${REPO_SANITIZED}-${SHORT_SHA}"
+          SHORT_SHA=${GITHUB_SHA::7}
+          SAFE_REPO=$(echo "${GITHUB_REPOSITORY}" | tr '/' '-')
+          IMAGE_TAG="${SAFE_REPO}-${SHORT_SHA}"
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
-          docker build -t $IMAGE_TAG .
+          echo "::set-output name=image_tag::$IMAGE_TAG"
 
-      - name: Login to ECR
+      - name: Build Docker image
+        working-directory: app/frontend-src
         run: |
-          aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
+          IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
+          docker build -t $IMAGE_URI .
+          docker tag $IMAGE_URI ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:latest
 
       - name: Push Docker image to ECR
         run: |
-          docker tag $IMAGE_TAG ${{ secrets.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG
-          docker push ${{ secrets.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG
+          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:latest
 
-      - name: Scan Docker image with Trivy
-        run: |
-          trivy image --severity HIGH,CRITICAL ${{ secrets.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG
-
-      - name: Trigger CD Pipeline
+      - name: Trigger CD workflow
         uses: benc-uk/workflow-dispatch@v1
         with:
           workflow: Frontend CD Pipeline (EKS)
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          ref: master
-          inputs: '{"image_tag": "${{ env.IMAGE_TAG }}"}'
+          ref: ${{ github.ref_name }}
+          inputs: |
+            image_tag: ${{ steps.meta.outputs.image_tag }}
+            namespace: ${{ env.DEPLOY_NAMESPACE }}

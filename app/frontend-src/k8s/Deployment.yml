@@ -27,7 +27,7 @@ kind: Service
 metadata:
   name: frontendsvc
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: ecommstore
   ports:
