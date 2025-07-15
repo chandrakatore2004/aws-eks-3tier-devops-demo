@@ -109,3 +109,7 @@ jobs:
           inputs: |
             image_tag: '{"image_tag": "${{ steps.meta.outputs.image_tag }}"}'
             namespace: ${{ env.DEPLOY_NAMESPACE }}
+
+
+
+            
