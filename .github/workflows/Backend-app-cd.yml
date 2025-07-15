@@ -53,3 +53,4 @@ jobs:
         run: |
           kubectl apply -n ${{ inputs.namespace }} -f Deployment.yml
           kubectl apply -n ${{ inputs.namespace }} -f Ingress.yml
+          
