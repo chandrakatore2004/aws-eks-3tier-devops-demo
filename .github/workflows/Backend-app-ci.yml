@@ -106,10 +106,11 @@ jobs:
           workflow: Backend CD Pipeline (EKS)
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           ref: ${{ github.ref_name }}
-          inputs: |
-            image_tag: '{"image_tag": "${{ steps.meta.outputs.image_tag }}"}'
-            namespace: ${{ env.DEPLOY_NAMESPACE }}
+          inputs: >-
+            {
+              "image_tag": "${{ steps.meta.outputs.image_tag }}",
+              "namespace": "${{ env.DEPLOY_NAMESPACE }}"
+            }
 
 
 
-            
