@@ -4,14 +4,21 @@ metadata:
   name: backend-ingress
   namespace: develop
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   ingressClassName: nginx
   rules:
     - http:
         paths:
-          - path: /products/(.*)
-            pathType: ImplementationSpecific
+          - path: /products
+            pathType: Prefix
+            backend:
+              service:
+                name: productssvc
+                port:
+                  number: 80
+          - path: /products/
+            pathType: Prefix
             backend:
               service:
                 name: productssvc
