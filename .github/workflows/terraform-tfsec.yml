@@ -2,70 +2,29 @@ name: Terraform Security Scan (tfsec)
 
 on:
   push:
-    branches: [master, develop]
+    branches: [main, develop]  # ✅ Use 'main' instead of 'master' if your default branch is 'main'
     paths:
       - 'terraform/**'
-  workflow_dispatch:
+
+  workflow_dispatch:  # ✅ Enables "Run workflow" button in GitHub Actions UI
 
 jobs:
   tfsec:
-    name: Run tfsec and export HTML report
-    runs-on: [self-hosted, linux, qa]
+    name: Run tfsec on Terraform Code
+    runs-on: [self-hosted, linux, qa]  # ✅ Your EC2 runner labels
 
     steps:
-      - name: Checkout code
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install dependencies & create venv
+      - name: Run tfsec scan
         run: |
-          sudo apt-get update
-          sudo apt-get install -y jq python3-full python3-venv
-          
-          # Create isolated Python environment
-          python3 -m venv .venv
-          . .venv/bin/activate
-
-          # Upgrade pip inside venv and install dependencies
-          pip install --upgrade pip
-          pip install jinja2
-
-      - name: Run tfsec (JSON Output)
-        run: |
-          mkdir -p terraform/tfsec-report
+          echo "🔍 Scanning Terraform code in branch: ${{ github.ref_name }}"
           cd terraform
-          tfsec --format json --out tfsec-report.json || true
+          tfsec . --tfvars-file=dev.tfvars > tfsec-report.txt || true  # ✅ tfsec soft fail to avoid job exit
 
-      - name: Convert JSON to HTML (using Jinja2 in venv)
-        run: |
-          . .venv/bin/activate
-          
-          cat > json_to_html.py <<EOF
-          import json
-          from jinja2 import Template
-
-          with open("terraform/tfsec-report.json") as f:
-              data = json.load(f)
-
-          tmpl = Template(\"""
-          <html><head><title>tfsec Report</title></head><body>
-          <h1>tfsec Report - {{ results|length }} issues</h1>
-          <ul>
-          {% for item in results %}
-            <li><strong>{{ item['rule_id'] }}</strong>: {{ item['description'] }}
-              <br><code>{{ item['location']['filename'] }}:{{ item['location']['start_line'] }}</code>
-            </li>
-          {% endfor %}
-          </ul></body></html>
-          \""")
-
-          with open("terraform/tfsec-report/index.html", "w") as f:
-              f.write(tmpl.render(results=data["results"]))
-          EOF
-
-          python3 json_to_html.py
-
-      - name: Upload HTML Report
+      - name: Upload tfsec report artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tfsec-html-report-${{ github.ref_name }}
-          path: terraform/tfsec-report/index.html
+          name: tfsec-report-${{ github.ref_name }}
+          path: terraform/tfsec-report.txt
