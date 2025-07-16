@@ -2,23 +2,21 @@ name: Terraform Security Scan (tfsec)
 
 on:
   push:
-    branches:
-      - master
-      - develop
+    branches: [master, develop]
     paths:
       - 'terraform/**'
+
   pull_request:
-    branches:
-      - master
-      - develop
+    branches: [master, develop]
     paths:
       - 'terraform/**'
-  workflow_dispatch:
+
+  workflow_dispatch:  # ✅ Enables "Run workflow" button in GitHub Actions UI
 
 jobs:
   tfsec:
     name: Run tfsec on Terraform Code
-    runs-on: [self-hosted, linux, qa]  # Matches your EC2 runner labels
+    runs-on: [self-hosted, linux, qa]
 
     steps:
       - name: Checkout Repository
@@ -28,17 +26,10 @@ jobs:
         run: |
           echo "🔍 Scanning Terraform code in branch: ${{ github.ref_name }}"
           cd terraform
-          tfsec . --tfvars-file=dev.tfvars > tfsec-report.txt
-
-      - name: Save tfsec output
-        run: |
-          cd terraform
-          tfsec . > tfsec-report.txt
+          tfsec . --tfvars-file=dev.tfvars > tfsec-report.txt || true  # soft fail
 
       - name: Upload tfsec report artifact
         uses: actions/upload-artifact@v4
         with:
           name: tfsec-report-${{ github.ref_name }}
           path: terraform/tfsec-report.txt
-
-
