@@ -5,7 +5,7 @@ on:
     branches: [master, develop]
     paths:
       - 'terraform/**'
-  workflow_dispatch:  # Enables manual "Run workflow" button
+  workflow_dispatch:
 
 jobs:
   tfsec:
@@ -16,11 +16,14 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install pip and sarif-tools (Python)
+      - name: Create virtual environment & install sarif-tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3-pip
-          python3 -m pip install --no-cache-dir sarif-tools
+          sudo apt-get install -y python3-venv
+          python3 -m venv sarifenv
+          source sarifenv/bin/activate
+          pip install --no-cache-dir sarif-tools
+          echo "source sarifenv/bin/activate" >> $GITHUB_ENV  # persist venv
 
       - name: Run tfsec scan (Plain Text)
         run: |
@@ -28,7 +31,7 @@ jobs:
           cd terraform
           tfsec . --tfvars-file=dev.tfvars > tfsec-report.txt || true
 
-      - name: Upload Plain Text Report
+      - name: Upload tfsec Text Report
         uses: actions/upload-artifact@v4
         with:
           name: tfsec-text-report-${{ github.ref_name }}
@@ -39,12 +42,13 @@ jobs:
           cd terraform
           tfsec --format sarif --out tfsec-results.sarif || true
 
-      - name: Convert SARIF to HTML
+      - name: Convert SARIF to HTML Report (inside venv)
         run: |
+          source sarifenv/bin/activate
           mkdir -p terraform/tfsec-report
           python3 -m sarif.tools html terraform/tfsec-results.sarif --output terraform/tfsec-report/index.html
 
-      - name: Upload HTML Report
+      - name: Upload tfsec HTML Report
         uses: actions/upload-artifact@v4
         with:
           name: tfsec-html-report-${{ github.ref_name }}
