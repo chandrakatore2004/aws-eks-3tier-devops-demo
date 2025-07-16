@@ -27,3 +27,23 @@ jobs:
         with:
           name: tfsec-report-${{ github.ref_name }}
           path: terraform/tfsec-report.txt
+
+    
+      - name: Run tfsec scan and output SARIF
+        run: |
+          cd terraform
+          tfsec --format sarif --out tfsec-results.sarif || true  # soft fail
+
+      - name: Convert SARIF to HTML
+        run: |
+          npm install -g @microsoft/sarif-tools
+          mkdir -p tfsec-report
+          sarif-to-html terraform/tfsec-results.sarif --output terraform/tfsec-report/index.html
+
+      - name: Upload tfsec HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfsec-html-report-${{ github.ref_name }}
+          path: terraform/tfsec-report/
+     
+
