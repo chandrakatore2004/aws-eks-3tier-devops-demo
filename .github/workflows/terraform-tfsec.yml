@@ -28,7 +28,7 @@ jobs:
         run: |
           echo "🔍 Scanning Terraform code in branch: ${{ github.ref_name }}"
           cd terraform
-          tfsec .
+          tfsec . --tfvars-file=dev.tfvars > tfsec-report.txt
 
       - name: Save tfsec output
         run: |
@@ -41,4 +41,4 @@ jobs:
           name: tfsec-report-${{ github.ref_name }}
           path: terraform/tfsec-report.txt
 
-          
+
