@@ -5,45 +5,42 @@ on:
     branches: [master, develop]
     paths:
       - 'terraform/**'
-  workflow_dispatch:  # ✅ Enables "Run workflow" button in GitHub Actions UI
+  workflow_dispatch:  # Enables "Run workflow" button in GitHub Actions UI
 
 jobs:
   tfsec:
     name: Run tfsec on Terraform Code
-    runs-on: [self-hosted, linux, qa]
+    runs-on: [self-hosted, linux, qa]  # Your EC2-based self-hosted runner
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Run tfsec scan
+      - name: Run tfsec scan and save text report
         run: |
           echo "🔍 Scanning Terraform code in branch: ${{ github.ref_name }}"
           cd terraform
           tfsec . --tfvars-file=dev.tfvars > tfsec-report.txt || true  # soft fail
 
-      - name: Upload tfsec report artifact
+      - name: Upload tfsec text report
         uses: actions/upload-artifact@v4
         with:
           name: tfsec-report-${{ github.ref_name }}
           path: terraform/tfsec-report.txt
 
-    
       - name: Run tfsec scan and output SARIF
         run: |
           cd terraform
-          tfsec --format sarif --out tfsec-results.sarif || true  # soft fail
+          tfsec . --format sarif --out tfsec-results.sarif || true  # soft fail
 
       - name: Convert SARIF to HTML
         run: |
-          npm install -g @microsoft/sarif-tools
-          mkdir -p tfsec-report
-          sarif-to-html terraform/tfsec-results.sarif --output terraform/tfsec-report/index.html
+          npm install -g sarif-html
+          mkdir -p terraform/tfsec-report
+          sarif-html -i terraform/tfsec-results.sarif -o terraform/tfsec-report/index.html
 
       - name: Upload tfsec HTML report
         uses: actions/upload-artifact@v4
         with:
           name: tfsec-html-report-${{ github.ref_name }}
           path: terraform/tfsec-report/
-     
-
