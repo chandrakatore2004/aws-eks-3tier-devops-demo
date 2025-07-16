@@ -16,11 +16,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install dependencies
+      - name: Install dependencies & create venv
         run: |
           sudo apt-get update
-          sudo apt-get install -y jq python3 python3-pip
-          pip3 install jinja2
+          sudo apt-get install -y jq python3-full python3-venv
+          
+          # Create isolated Python environment
+          python3 -m venv .venv
+          . .venv/bin/activate
+
+          # Upgrade pip inside venv and install dependencies
+          pip install --upgrade pip
+          pip install jinja2
 
       - name: Run tfsec (JSON Output)
         run: |
@@ -28,9 +35,11 @@ jobs:
           cd terraform
           tfsec --format json --out tfsec-report.json || true
 
-      - name: Convert JSON to HTML (simple script)
+      - name: Convert JSON to HTML (using Jinja2 in venv)
         run: |
-          cat > terraform/json_to_html.py <<EOF
+          . .venv/bin/activate
+          
+          cat > json_to_html.py <<EOF
           import json
           from jinja2 import Template
 
@@ -53,9 +62,9 @@ jobs:
               f.write(tmpl.render(results=data["results"]))
           EOF
 
-          python3 terraform/json_to_html.py
+          python3 json_to_html.py
 
-      - name: Upload HTML report
+      - name: Upload HTML Report
         uses: actions/upload-artifact@v4
         with:
           name: tfsec-html-report-${{ github.ref_name }}
