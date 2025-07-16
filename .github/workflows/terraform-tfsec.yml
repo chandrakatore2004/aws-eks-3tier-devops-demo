@@ -2,41 +2,29 @@ name: Terraform Security Scan (tfsec)
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop]  # ✅ Use 'main' instead of 'master' if your default branch is 'main'
     paths:
       - 'terraform/**'
-  workflow_dispatch:
+
+  workflow_dispatch:  # ✅ Enables "Run workflow" button in GitHub Actions UI
 
 jobs:
-  tfsec-scan:
-    name: Terraform Security Scan
-    runs-on: [self-hosted, linux, qa]
-
-    defaults:
-      run:
-        working-directory: terraform  # ✅ Set working directory for all run steps
+  tfsec:
+    name: Run tfsec on Terraform Code
+    runs-on: [self-hosted, linux, qa]  # ✅ Your EC2 runner labels
 
     steps:
-      - name: 🛎️ Checkout Code
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: 🔍 Run tfsec Scan
+      - name: Run tfsec scan
         run: |
-          echo "Scanning Terraform code in branch: ${{ github.ref_name }}"
-          tfsec . --tfvars-file=dev.tfvars > tfsec-report.txt || true
+          echo "🔍 Scanning Terraform code in branch: ${{ github.ref_name }}"
+          cd terraform
+          tfsec . --tfvars-file=dev.tfvars > tfsec-report.txt || true  # ✅ tfsec soft fail to avoid job exit
 
-      - name: 🧪 Convert Report to HTML
-        run: |
-          {
-            echo "<!DOCTYPE html><html><head><meta charset='UTF-8'><title>tfsec Report</title>"
-            echo "<style>body{font-family:sans-serif;}pre{white-space:pre-wrap;background:#f9f9f9;padding:1em;border:1px solid #ccc;}</style>"
-            echo "</head><body><h1>tfsec Report - ${{ github.ref_name }}</h1><pre>"
-            cat tfsec-report.txt
-            echo "</pre></body></html>"
-          } > tfsec-report.html
-
-      - name: 🗂️ Upload HTML Report
+      - name: Upload tfsec report artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tfsec-report-html-${{ github.ref_name }}
-          path: terraform/tfsec-report.html
+          name: tfsec-report-${{ github.ref_name }}
+          path: terraform/tfsec-report.txt
