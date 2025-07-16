@@ -5,31 +5,46 @@ on:
     branches: [master, develop]
     paths:
       - 'terraform/**'
-  workflow_dispatch:
+  workflow_dispatch:  # Enables manual "Run workflow" button
 
 jobs:
   tfsec:
+    name: Run tfsec on Terraform Code
     runs-on: [self-hosted, linux, qa]
 
     steps:
-      - name: Checkout code
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Run tfsec and produce output
+      - name: Install pip and sarif-tools (Python)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip
+          python3 -m pip install --no-cache-dir sarif-tools
+
+      - name: Run tfsec scan (Plain Text)
+        run: |
+          echo "🔍 Scanning Terraform code in branch: ${{ github.ref_name }}"
+          cd terraform
+          tfsec . --tfvars-file=dev.tfvars > tfsec-report.txt || true
+
+      - name: Upload Plain Text Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfsec-text-report-${{ github.ref_name }}
+          path: terraform/tfsec-report.txt
+
+      - name: Run tfsec scan (SARIF Format)
         run: |
           cd terraform
-          tfsec . --tfvars-file=dev.tfvars \
-            --format sarif --out tfsec-results.sarif || true
+          tfsec --format sarif --out tfsec-results.sarif || true
 
-      - name: Install sarif-tools (Python)
-        run: python3 -m pip install sarif-tools
-
-      - name: Convert SARIF to HTML report
+      - name: Convert SARIF to HTML
         run: |
-          sarif html terraform/tfsec-results.sarif \
-            -o terraform/tfsec-report/index.html
+          mkdir -p terraform/tfsec-report
+          python3 -m sarif.tools html terraform/tfsec-results.sarif --output terraform/tfsec-report/index.html
 
-      - name: Upload HTML report
+      - name: Upload HTML Report
         uses: actions/upload-artifact@v4
         with:
           name: tfsec-html-report-${{ github.ref_name }}
