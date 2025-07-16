@@ -21,9 +21,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y python3-venv
           python3 -m venv sarifenv
-          source sarifenv/bin/activate
-          pip install --no-cache-dir sarif-tools
-          echo "source sarifenv/bin/activate" >> $GITHUB_ENV  # persist venv
+          ./sarifenv/bin/pip install --no-cache-dir sarif-tools
 
       - name: Run tfsec scan (Plain Text)
         run: |
@@ -42,11 +40,9 @@ jobs:
           cd terraform
           tfsec --format sarif --out tfsec-results.sarif || true
 
-      - name: Convert SARIF to HTML Report (inside venv)
+      - name: Convert SARIF to HTML Report
         run: |
-          source sarifenv/bin/activate
-          mkdir -p terraform/tfsec-report
-          python3 -m sarif.tools html terraform/tfsec-results.sarif --output terraform/tfsec-report/index.html
+          ./sarifenv/bin/python3 -m sarif.tools html terraform/tfsec-results.sarif --output terraform/tfsec-report/index.html
 
       - name: Upload tfsec HTML Report
         uses: actions/upload-artifact@v4
