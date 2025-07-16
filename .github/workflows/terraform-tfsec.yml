@@ -3,13 +3,13 @@ name: Terraform Security Scan (tfsec)
 on:
   push:
     branches:
-      - main
+      - master
       - develop
     paths:
       - 'terraform/**'
   pull_request:
     branches:
-      - main
+      - master
       - develop
     paths:
       - 'terraform/**'
@@ -41,4 +41,3 @@ jobs:
           name: tfsec-report-${{ github.ref_name }}
           path: terraform/tfsec-report.txt
 
-          
