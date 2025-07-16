@@ -1,0 +1,29 @@
+name: Terraform Security Scan (tfsec)
+
+on:
+  push:
+    branches: [master, develop]
+    paths:
+      - 'terraform/**'
+  workflow_dispatch:  # ✅ Enables "Run workflow" button in GitHub Actions UI
+
+jobs:
+  tfsec:
+    name: Run tfsec on Terraform Code
+    runs-on: [self-hosted, linux, qa]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Run tfsec scan
+        run: |
+          echo "🔍 Scanning Terraform code in branch: ${{ github.ref_name }}"
+          cd terraform
+          tfsec . --tfvars-file=dev.tfvars > tfsec-report.txt || true  # soft fail
+
+      - name: Upload tfsec report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfsec-report-${{ github.ref_name }}
+          path: terraform/tfsec-report.txt
