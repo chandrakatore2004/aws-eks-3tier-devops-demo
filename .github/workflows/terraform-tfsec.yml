@@ -24,7 +24,6 @@ jobs:
         id: tfsec
         run: |
           echo "Scanning Terraform code in branch: ${{ github.ref_name }}"
-          # Run tfsec; don't fail job if findings are present
           tfsec . --tfvars-file=dev.tfvars --no-color > tfsec-report.txt || true
 
       - name: 📝 Write Summary to GitHub Actions UI
@@ -39,7 +38,7 @@ jobs:
             echo '```'
           } >> $GITHUB_STEP_SUMMARY
 
-      # Optional: Make the report downloadable as an artifact
+      # Optional: Upload tfsec report as artifact
       # - name: 📄 Upload tfsec report
       #   uses: actions/upload-artifact@v4
       #   with:
