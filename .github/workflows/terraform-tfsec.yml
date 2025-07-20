@@ -2,9 +2,7 @@ name: Terraform Security Scan (tfsec)
 
 on:
   push:
-    branches:
-      - main
-      - develop
+    branches: [main, develop]
     paths:
       - 'terraform/**'
   workflow_dispatch:
@@ -16,7 +14,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: terraform # All run steps run in terraform/
+        working-directory: terraform
 
     steps:
       - name: 🛎️ Checkout Code
@@ -25,31 +23,15 @@ jobs:
       - name: 🔍 Run tfsec Scan
         id: tfsec
         run: |
-          set -e
           echo "Scanning Terraform code in branch: ${{ github.ref_name }}"
-          tfsec . --tfvars-file=dev.tfvars > tfsec-report.txt || true # Don't fail on findings
+          tfsec . --tfvars-file=dev.tfvars > tfsec-report.txt || true
 
-      - name: 🧪 Convert Report to HTML
-        id: html
+      - name: 📝 Write Summary to GitHub Actions UI
         run: |
-          {
-            echo "<!DOCTYPE html><html><head><meta charset='UTF-8'><title>tfsec Report</title>"
-            echo "<style>body{font-family:sans-serif;}pre{white-space:pre-wrap;background:#f9f9f9;padding:1em;border:1px solid #ccc;}</style>"
-            echo "</head><body><h1>tfsec Report - ${{ github.ref_name }}</h1><pre>"
-            cat tfsec-report.txt
-            echo "</pre></body></html>"
-          } > tfsec-report.html
-
-      - name: 🗂️ Upload HTML Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: tfsec-report-html-${{ github.ref_name }}
-          path: tfsec-report.html # No need for 'terraform/' prefix due to working-directory
-
-      - name: ✍️ Add tfsec Summary to Actions UI
-        run: |
-          echo "## Terraform Security Scan Summary" >> $GITHUB_STEP_SUMMARY
-          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "- [Download HTML tfsec report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔒 Terraform Security Scan (tfsec) Report" >> $GITHUB_STEP_SUMMARY
+          echo "- Branch: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Scan completed with tfsec" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "See the attached artifact for the complete report." >> $GITHUB_STEP_SUMMARY
+          echo '````' >> $GITHUB_STEP_SUMMARY
+          cat tfsec-report.txt >> $GITHUB_STEP_SUMMARY
+          echo '````' >> $GITHUB_STEP_SUMMARY
