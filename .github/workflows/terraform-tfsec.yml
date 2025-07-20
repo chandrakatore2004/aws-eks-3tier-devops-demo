@@ -21,7 +21,6 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 🔍 Run tfsec Scan
-        id: tfsec
         run: |
           echo "Scanning Terraform code in branch: ${{ github.ref_name }}"
           tfsec . --tfvars-file=dev.tfvars --no-color > tfsec-report.txt || true
@@ -29,18 +28,30 @@ jobs:
       - name: 📝 Write Summary to GitHub Actions UI
         run: |
           {
-            echo "### 🔒 Terraform Security Scan (tfsec) Report"
-            echo "- Branch: \`${{ github.ref_name }}\`"
-            echo "- Scan completed with tfsec"
+            echo "## 🔐 Terraform Security Scan Summary"
+            echo "**Branch:** \`${{ github.ref_name }}\`"
             echo ""
-            echo '```
-            cat tfsec-report.txt
-            echo '```'
-          } >> $GITHUB_STEP_SUMMARY
+            echo "| Severity | Description | File | Line |"
+            echo "|----------|-------------|------|------|"
 
-      # Optional: Upload tfsec report as artifact
-      # - name: 📄 Upload tfsec report
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: tfsec-report-${{ github.ref_name }}
-      #     path: tfsec-report.txt
+            grep -B 10 "CRITICAL\|HIGH\|MEDIUM\|LOW" tfsec-report.txt | \
+            awk '
+              BEGIN { FS="[: ]+" }
+              /CRITICAL|HIGH|MEDIUM|LOW/ { sev=$NF }
+              /ID/ { desc=last_line }
+              /modules.*\.tf/ {
+                file=$1
+                sub(/^.*\//, "", file)
+                line=$2
+                if (sev && desc && file && line) {
+                  gsub(/\r/, "", desc)
+                  printf "| %s | %s | %s | %s |\n", sev, desc, file, line
+                  sev=""; desc=""; file=""; line=""
+                }
+              }
+              { last_line=$0 }
+            '
+
+            echo ""
+            echo "_Scan completed using [tfsec](https://github.com/aquasecurity/tfsec)_"
+          } >> $GITHUB_STEP_SUMMARY
