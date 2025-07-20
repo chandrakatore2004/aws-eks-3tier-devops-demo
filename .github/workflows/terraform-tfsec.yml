@@ -24,20 +24,22 @@ jobs:
         id: tfsec
         run: |
           echo "Scanning Terraform code in branch: ${{ github.ref_name }}"
-          # Disable colored output for clean summaries
+          # Run tfsec; don't fail job if findings are present
           tfsec . --tfvars-file=dev.tfvars --no-color > tfsec-report.txt || true
 
       - name: 📝 Write Summary to GitHub Actions UI
         run: |
-          echo "### 🔒 Terraform Security Scan (tfsec) Report" >> $GITHUB_STEP_SUMMARY
-          echo "- Branch: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Scan completed with tfsec" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo '```
-          cat tfsec-report.txt >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+          {
+            echo "### 🔒 Terraform Security Scan (tfsec) Report"
+            echo "- Branch: \`${{ github.ref_name }}\`"
+            echo "- Scan completed with tfsec"
+            echo ""
+            echo '```
+            cat tfsec-report.txt
+            echo '```'
+          } >> $GITHUB_STEP_SUMMARY
 
-      # Optional: Upload the plain report file for download and traceability
+      # Optional: Make the report downloadable as an artifact
       # - name: 📄 Upload tfsec report
       #   uses: actions/upload-artifact@v4
       #   with:
