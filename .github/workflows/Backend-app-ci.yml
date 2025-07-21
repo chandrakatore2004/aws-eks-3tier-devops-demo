@@ -112,20 +112,37 @@ jobs:
               "namespace": "${{ env.DEPLOY_NAMESPACE }}"
             }
 
-      - name: Generate GitHub Actions Job Summary
+      - name: 🚀 Generate GitHub Actions Job Summary
         run: |
-          echo "## CI Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Namespace:** \`${{ env.DEPLOY_NAMESPACE }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Image Tag:** \`${{ env.IMAGE_TAG }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- Maven Build: Success" >> $GITHUB_STEP_SUMMARY
-          echo "- SonarCloud Analysis: Submitted (check dashboard for results)" >> $GITHUB_STEP_SUMMARY
-          echo "- Docker Image: \`***.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Trivy Scan: Run with CRITICAL severity blocking" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**CD workflow triggered:** Backend CD Pipeline (EKS)" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "## 🧪 CI/CD Summary"
+            echo ""
+            echo "**Branch:** \`${{ github.ref_name }}\`"
+            echo "**Namespace:** \`${{ env.DEPLOY_NAMESPACE }}\`"
+            echo "**Image Tag:** \`${{ env.IMAGE_TAG }}\`"
+            echo ""
+            echo "### 📋 CI Steps Status"
+            echo ""
+            echo "| Step                 | Status                       |"
+            echo "|----------------------|------------------------------|"
+            echo "|  Maven Build        | ✅ Success                    |"
+            echo "| SonarCloud Analysis | ✅ Submitted to dashboard     |"
+            echo "| Docker Build/Push   | ✅ Image tagged and pushed    |"
+            echo "|  Trivy Scan          | ⚠️ Run with CRITICAL severity blocking |"
+            echo ""
+            echo "### 📦 Docker Image"
+            echo ""
+            echo "\`\`\`"
+            echo "***.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}"
+            echo "\`\`\`"
+            echo ""
+            echo "### 🚀 CD Workflow"
+            echo ""
+            echo "**Triggered:** Backend CD Pipeline (EKS)"
+            echo ""
+            echo "🔗 [View Deployment Logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+          } >> $GITHUB_STEP_SUMMARY
+
 
 
 
