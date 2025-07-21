@@ -112,5 +112,18 @@ jobs:
               "namespace": "${{ env.DEPLOY_NAMESPACE }}"
             }
 
+      - name: Write GitHub Actions Summary
+        run: |
+          echo "## Backend CI Summary" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Namespace:** \`${{ env.DEPLOY_NAMESPACE }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Image Tag:** \`${{ env.IMAGE_TAG }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Maven Build: Success" >> $GITHUB_STEP_SUMMARY
+          echo "- SonarCloud Analysis: Submitted (check dashboard for results)" >> $GITHUB_STEP_SUMMARY
+          echo "- Docker Image: \`${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Trivy Scan: Run with CRITICAL severity blocking" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "CD workflow triggered: Backend CD Pipeline (EKS)" >> $GITHUB_STEP_SUMMARY
 
 
