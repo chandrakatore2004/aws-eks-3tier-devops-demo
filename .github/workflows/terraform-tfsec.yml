@@ -17,41 +17,28 @@ jobs:
         working-directory: terraform
 
     steps:
-      - name: 🛎️ Checkout Code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: 🔍 Run tfsec Scan
+      - name:  Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name:  Run tfsec Scan (JSON Output)
         run: |
-          echo "Scanning Terraform code in branch: ${{ github.ref_name }}"
-          tfsec . --tfvars-file=dev.tfvars --no-color > tfsec-report.txt || true
+          echo "Running tfsec scan in branch: ${{ github.ref_name }}"
+          tfsec . --tfvars-file=dev.tfvars --no-color --format json > tfsec-report.json || true
 
-      - name: 📝 Write Summary to GitHub Actions UI
+      - name: 📝 Write tfsec Summary to GitHub Actions UI
         run: |
-          {
-            echo "## 🔐 Terraform Security Scan Summary"
-            echo "**Branch:** \`${{ github.ref_name }}\`"
-            echo ""
-            echo "| Severity | Description | File | Line |"
-            echo "|----------|-------------|------|------|"
+          echo "## 🔐 Terraform Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Severity | Description | File | Line |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------------|------|------|" >> $GITHUB_STEP_SUMMARY
 
-            grep -B 10 "CRITICAL\|HIGH\|MEDIUM\|LOW" tfsec-report.txt | \
-            awk '
-              BEGIN { FS="[: ]+" }
-              /CRITICAL|HIGH|MEDIUM|LOW/ { sev=$NF }
-              /ID/ { desc=last_line }
-              /modules.*\.tf/ {
-                file=$1
-                sub(/^.*\//, "", file)
-                line=$2
-                if (sev && desc && file && line) {
-                  gsub(/\r/, "", desc)
-                  printf "| %s | %s | %s | %s |\n", sev, desc, file, line
-                  sev=""; desc=""; file=""; line=""
-                }
-              }
-              { last_line=$0 }
-            '
+          jq -r '.results[] | 
+            "| \(.severity) | \(.description | gsub("[\\n\\r]"; " ") | gsub("\\|"; "\\\\|")) | \(.location.filename | split("/") | last) | \(.location.start_line) |"' tfsec-report.json \
+            >> $GITHUB_STEP_SUMMARY
 
-            echo ""
-            echo "_Scan completed using [tfsec](https://github.com/aquasecurity/tfsec)_"
-          } >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "_Scan completed using [tfsec](https://github.com/aquasecurity/tfsec)_" >> $GITHUB_STEP_SUMMARY
