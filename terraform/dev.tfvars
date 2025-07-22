@@ -25,9 +25,9 @@ node_groups = {
     capacity_type  = "ON_DEMAND"
     version        = "1.31"
     scaling_config = {
-      desired_size = 1
+      desired_size = 2
       max_size     = 4
-      min_size     = 1
+      min_size     = 2
     }
   }
 }
