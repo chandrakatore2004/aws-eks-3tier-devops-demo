@@ -26,7 +26,7 @@ node_groups = {
     version        = "1.31"
     scaling_config = {
       desired_size = 0
-      max_size     = 4
+      max_size     = 0
       min_size     = 0
     }
   }
