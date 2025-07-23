@@ -3,6 +3,8 @@ kind: Ingress
 metadata:
   name: backend-ingress
   namespace: develop
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   ingressClassName: nginx
   rules:
@@ -14,6 +16,4 @@ spec:
               service:
                 name: productssvc
                 port:
-                  number: 80
-                  
-
+                  number: 80 
