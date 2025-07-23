@@ -8,13 +8,6 @@ spec:
   rules:
     - http:
         paths:
-          - path: /products
-            pathType: Prefix
-            backend:
-              service:
-                name: productssvc
-                port:
-                  number: 80
           - path: /products/
             pathType: Prefix
             backend:
@@ -22,3 +15,5 @@ spec:
                 name: productssvc
                 port:
                   number: 80
+                  
+
