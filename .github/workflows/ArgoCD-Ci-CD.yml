@@ -3,7 +3,7 @@ name: ArgoCd-Solar System CI/CD Pipeline
 on:
   push:
     branches:
-      - main
+      - master
       - develop
   workflow_dispatch:
 
