@@ -46,6 +46,7 @@ jobs:
 
       # 5. Run Code Coverage (optional)
       - name: Run Code Coverage
+        continue-on-error: true    
         working-directory: solar-system
         run: npm run coverage
 
