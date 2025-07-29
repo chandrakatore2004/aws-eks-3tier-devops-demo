@@ -1,4 +1,4 @@
-name: ArgoCd-Solar System CI/CD Pipeline
+name: ArgoCd-Solar System CI-CD Pipeline
 
 on:
   push:
