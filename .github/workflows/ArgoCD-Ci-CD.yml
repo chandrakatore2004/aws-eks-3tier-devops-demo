@@ -45,7 +45,7 @@ jobs:
 
       # 4. Run Code Coverage (optional)
       - name: Run Code Coverage
-        continue-on-error: true    
+        continue-on-error: true
         working-directory: solar-system
         run: npm run coverage
 
@@ -80,7 +80,7 @@ jobs:
           docker build -t $IMAGE_URI ./solar-system
           docker push $IMAGE_URI
 
-      # 10. Update Kubernetes manifest with new image tag
+      # 10. Update Kubernetes manifest with new image
       - name: Update Kubernetes manifest with new image
         run: |
           IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_REPO }}:${IMAGE_TAG}
@@ -100,4 +100,4 @@ jobs:
           git remote set-url origin https://x-access-token:${GH_PAT}@github.com/${{ github.repository }}
           git add $MANIFEST_FILE
           git commit -m "ci: Update image to $IMAGE_URI [skip ci]" || echo "No changes to commit"
-          git push origin HEAD:${GITHUB_REF#refs/heads/}
+          git push origin HEAD:${GITHUB_REF##*/}
