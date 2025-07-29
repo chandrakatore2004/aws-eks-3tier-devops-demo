@@ -34,50 +34,53 @@ jobs:
         with:
           node-version: '20'
 
-      # 3. Install Node.js dependencies
+      # 3. Install NPM dependencies
       - name: Install NPM dependencies
+        working-directory: solar-system
         run: npm install
 
       # 4. Run Unit Tests with Mocha
       - name: Run Unit Tests with Mocha
+        working-directory: solar-system
         run: npm test
 
-      # Optional: Run code coverage if needed
+      # 5. Run Code Coverage (optional)
       - name: Run Code Coverage
+        working-directory: solar-system
         run: npm run coverage
 
-      # 5. Configure AWS credentials (OIDC)
+      # 6. Configure AWS credentials (OIDC)
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # 6. Log in to Amazon ECR
+      # 7. Log in to Amazon ECR
       - name: Log in to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      # 7. Set image tag
+      # 8. Set image tag
       - name: Set image tag
         id: meta
         run: |
           IMAGE_TAG="${{ env.NAME }}-${{ github.run_id }}-${GITHUB_SHA::7}"
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
-      # 8. Set IMAGE_REPO
+      # 9. Set IMAGE_REPO
       - name: Set IMAGE_REPO
         run: echo "IMAGE_REPO=${{ env.ECR_REPOSITORY }}" >> $GITHUB_ENV
 
-      # 9. Build and push Docker image to ECR
+      # 10. Build and push Docker image to ECR
       - name: Build and push Docker image to ECR
         run: |
           IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_REPO }}:${IMAGE_TAG}
           echo "Building image $IMAGE_URI"
-          docker build -t $IMAGE_URI .
+          docker build -t $IMAGE_URI ./solar-system
           docker push $IMAGE_URI
 
-      # 10. Update Kubernetes manifest with new image tag
+      # 11. Update Kubernetes manifest with new image tag
       - name: Update Kubernetes manifest with new image
         run: |
           IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_REPO }}:${IMAGE_TAG}
@@ -86,7 +89,7 @@ jobs:
           sed -i "s#image: .*#image: $IMAGE_URI#g" $MANIFEST_FILE
           cat $MANIFEST_FILE
 
-      # 11. Commit & Push manifest updates
+      # 12. Commit & Push manifest updates
       - name: Commit & Push manifest updates
         run: |
           cd $GITOPS_PATH
