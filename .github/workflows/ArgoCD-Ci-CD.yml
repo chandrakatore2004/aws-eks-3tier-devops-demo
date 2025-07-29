@@ -1,0 +1,87 @@
+name: ArgoCd-Solar System CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+
+env:
+  AWS_REGION: ap-south-1
+  ECR_REPOSITORY: solar-system
+  GITOPS_PATH: app/backend-src/k8s       # Adjust path where your Kubernetes manifests are located
+  MANIFEST_FILE: deployment.yaml         # Deployment manifest file name
+
+jobs:
+  build-and-deploy:
+    runs-on: [self-hosted, linux, qa]
+    env:
+      NAME: solar-system
+      IMAGE_REPO: ${{ env.ECR_REPOSITORY }}
+
+    steps:
+      # 1. Checkout repository (code + manifests)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      # 2. Set up PHP and install dependencies
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'  # Change to your required PHP version
+          extensions: mbstring, xml, curl  # Add extras as needed
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      # 3. Run unit tests with PHPUnit
+      - name: Run Unit Tests with PHPUnit
+        run: |
+          vendor/bin/phpunit --configuration phpunit.xml
+
+      # 4. Configure AWS credentials via OIDC
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # 5. Log in to Amazon ECR
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      # 6. Set image tag
+      - name: Set image tag
+        id: meta
+        run: |
+          IMAGE_TAG="${{ env.NAME }}-${{ github.run_id }}-${GITHUB_SHA::7}"
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      # 7. Build and push Docker image to ECR
+      - name: Build and push Docker image to ECR
+        run: |
+          IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${IMAGE_TAG}
+          echo "Building image $IMAGE_URI"
+          docker build -t $IMAGE_URI .
+          docker push $IMAGE_URI
+
+      # 8. Update Kubernetes manifest with new image tag
+      - name: Update Kubernetes manifest with new image
+        run: |
+          echo "Updating manifest with new image $IMAGE_URI"
+          cd $GITOPS_PATH
+          sed -i "s#image: .*#image: $IMAGE_URI#g" $MANIFEST_FILE
+          cat $MANIFEST_FILE
+
+      # 9. Commit & push manifest changes to GitHub
+      - name: Commit & Push manifest updates
+        run: |
+          cd $GITOPS_PATH
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add $MANIFEST_FILE
+          git commit -m "ci: Update image to $IMAGE_URI [skip ci]" || echo "No changes to commit"
+          git push origin HEAD:${GITHUB_REF#refs/heads/}
