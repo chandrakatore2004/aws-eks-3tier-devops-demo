@@ -2,13 +2,16 @@ name: ArgoCd-Solar System CI/CD Pipeline
 
 on:
   push:
-    branches: [main, develop]
+    branches:
+      - main
+      - develop
+
   workflow_dispatch:
 
 env:
   AWS_REGION: ap-south-1
   ECR_REPOSITORY: solar-system
-  GITOPS_PATH: app/backend-src/k8s       # Adjust path where your Kubernetes manifests are located
+  GITOPS_PATH: solar-system/kubernetes/development       # Adjust path where your Kubernetes manifests are located
   MANIFEST_FILE: deployment.yaml         # Deployment manifest file name
 
 jobs:
