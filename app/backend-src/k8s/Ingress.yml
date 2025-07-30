@@ -4,7 +4,7 @@ metadata:
   name: backend-ingress
   namespace: develop
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/rewrite-target: /products/
 spec:
   ingressClassName: nginx
   rules:
