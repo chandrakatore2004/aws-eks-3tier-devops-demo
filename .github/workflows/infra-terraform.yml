@@ -63,7 +63,7 @@ jobs:
         if: ${{ github.event.inputs.action == 'plan' || github.event.inputs.action == 'destroy' }}
         run: |
           echo "👤 GitHub Actor: ${{ github.actor }}"
-          if ! grep -qw "${{ github.actor }}" terraform/config/terraform_allowed_users.txt; then
+          if ! grep -qw "${{ github.actor }}" config/terraform_allowed_users.txt; then
             echo "❌ User ${{ github.actor }} is not allowed to run terraform ${{ github.event.inputs.action }}."
             exit 1
           fi
