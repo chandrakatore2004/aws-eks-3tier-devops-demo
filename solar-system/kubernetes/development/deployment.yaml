@@ -17,7 +17,7 @@ spec:
         app: solar-system
     spec:
       containers:
-      - image: 596169662054.dkr.ecr.ap-south-1.amazonaws.com/solar-system:solar-system-16827026035-19c195e
+      - image: 596169662054.dkr.ecr.ap-south-1.amazonaws.com/solar-system:solar-system-16827091431-a1b6081
         imagePullPolicy: Always
         name: solar-system
         ports:
