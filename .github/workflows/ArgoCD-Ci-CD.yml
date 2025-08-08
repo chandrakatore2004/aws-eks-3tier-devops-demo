@@ -1,0 +1,106 @@
+name: ArgoCD-Solar-System CI-CD Pipeline
+
+on:
+  # push:
+  #   branches:
+  #     - master
+  #     - develop
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: write
+  actions: write
+
+env:
+  AWS_REGION: ap-south-1
+  ECR_REPOSITORY: solar-system
+  GITOPS_PATH: solar-system/kubernetes/development
+  MANIFEST_FILE: deployment.yaml
+
+jobs:
+  build-and-deploy:
+    runs-on: [self-hosted, linux, qa]
+    env:
+      NAME: solar-system
+
+    steps:
+      # 1. Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      # 2. Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 3. Install NPM dependencies
+      - name: Install NPM dependencies
+        working-directory: solar-system
+        run: npm install
+
+      # 4. Run Code Coverage (optional)
+      - name: Run Code Coverage
+        continue-on-error: true
+        working-directory: solar-system
+        run: npm run coverage
+
+      # 5. Configure AWS credentials (OIDC)
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # 6. Log in to Amazon ECR
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      # 7. Set image tag
+      - name: Set image tag
+        id: meta
+        run: |
+          IMAGE_TAG="${{ env.NAME }}-${{ github.run_id }}-${GITHUB_SHA::7}"
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      # 8. Set IMAGE_REPO
+      - name: Set IMAGE_REPO
+        run: echo "IMAGE_REPO=${{ env.ECR_REPOSITORY }}" >> $GITHUB_ENV
+
+      # 9. Build and push Docker image to ECR
+      - name: Build and push Docker image to ECR
+        run: |
+          IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_REPO }}:${IMAGE_TAG}
+          echo "Building image $IMAGE_URI"
+          docker build -t $IMAGE_URI ./solar-system
+          docker push $IMAGE_URI
+
+      # 10. Update Kubernetes manifest with new image
+      - name: Update Kubernetes manifest with new image
+        run: |
+          IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_REPO }}:${IMAGE_TAG}
+          echo "Updating manifest with new image $IMAGE_URI"
+          cd $GITOPS_PATH
+          sed -i "s#image: .*#image: $IMAGE_URI#g" $MANIFEST_FILE
+          cat $MANIFEST_FILE
+
+      # 11. Commit & Push manifest updates
+      - name: Commit & Push manifest updates
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          cd $GITOPS_PATH
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${GH_PAT}@github.com/${{ github.repository }}
+          git add $MANIFEST_FILE
+          git commit -m "ci: Update image to $IMAGE_URI [skip ci]" || echo "No changes to commit"
+          git push origin HEAD:${GITHUB_REF##*/}
+
+
+          
