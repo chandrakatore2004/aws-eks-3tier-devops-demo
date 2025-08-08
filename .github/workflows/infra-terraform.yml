@@ -64,7 +64,8 @@ jobs:
         run: |
           echo "👤 GitHub Actor: ${{ github.actor }}"
           if ! grep -qw "${{ github.actor }}" config/terraform_allowed_users.txt; then
-            echo "❌ User ${{ github.actor }} is not allowed to run terraform ${{ github.event.inputs.action }}."
+            echo "❌ User ${{ github.actor }} is not allowed to run terraform ${{ github.event.inputs.action }}. please 
+            add your username to config/terraform_allowed_users.txt"
             exit 1
           fi
 
