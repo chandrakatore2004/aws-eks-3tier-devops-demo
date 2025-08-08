@@ -57,6 +57,18 @@ jobs:
         run: |
           echo 'rds_username = "${{ secrets.RDS_USERNAME }}"' > secrets.auto.tfvars
           echo 'rds_password = "${{ secrets.RDS_PASSWORD }}"' >> secrets.auto.tfvars
+     
+        #  Temporary Restriction for testing (plan + destroy)
+      - name: Check Plan/Destroy Permissions
+        if: ${{ github.event.inputs.action == 'plan' || github.event.inputs.action == 'destroy' }}
+        run: |
+          echo "👤 GitHub Actor: ${{ github.actor }}"
+          if ! grep -qw "${{ github.actor }}" terraform/config/terraform_allowed_users.txt; then
+            echo "❌ User ${{ github.actor }} is not allowed to run terraform ${{ github.event.inputs.action }}."
+            exit 1
+          fi
+
+
 
       - name: Terraform Plan
         if: ${{ github.event.inputs.action == 'plan' }}
