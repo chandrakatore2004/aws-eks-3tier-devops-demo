@@ -41,12 +41,11 @@ jobs:
         run: npx playwright install --with-deps
 
       - name: Load environment variables
-        run: |
-          echo "Loading env file"
-          cp env/dev.env .env
-          cat .env
+        working-directory: playwright_automation
+        run: cp env/dev.env .env
 
       - name: Run Playwright tests
+        working-directory: playwright_automation
         run: npx playwright test
 
       - name: Upload Playwright report
