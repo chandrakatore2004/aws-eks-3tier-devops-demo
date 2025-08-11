@@ -101,3 +101,10 @@ declarative/mono-app.yml
 declarative/mono-app.yml
 
 jenkins-demo@tmp
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
