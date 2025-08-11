@@ -1,0 +1,75 @@
+name: Playwright CI
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: write
+  actions: write
+
+jobs:
+  build:
+    runs-on: [self-hosted, linux, qa]
+
+    steps:
+      # Checkout source code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Setup Node.js (latest LTS)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # Install dependencies
+      - name: Install dependencies
+        run: npm ci
+
+      # Install Playwright browsers (only Chrome in this case)
+      - name: Install Playwright (Chrome only)
+        run: npx playwright install --with-deps chrome
+
+      # Run Playwright tests
+      - name: Run Playwright tests
+        run: npm run test-single
+
+      # Upload Allure results as artifact
+      - name: Upload Allure results
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results
+          path: allure-results
+          retention-days: 20
+
+      # Checkout gh-pages branch to get Allure history
+      - name: Get Allure history
+        if: always()
+        continue-on-error: true
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      # Generate Allure report
+      - name: Generate Allure report
+        if: always()
+        id: allure-report
+        uses: simple-elf/allure-report-action@master
+        with:
+          allure_results: allure-results
+          gh_pages: gh-pages
+          allure_report: allure-report
+          allure_history: allure-history
+          keep_reports: 20
+
+      # Deploy Allure report to GitHub Pages
+      - name: Deploy report to GitHub Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-history
