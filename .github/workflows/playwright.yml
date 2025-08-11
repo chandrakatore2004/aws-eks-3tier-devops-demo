@@ -40,12 +40,9 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
-      - name: Load environment variables
-        working-directory: playwright_automation
-        run: cp env/dev.env .env
-
       - name: Run Playwright tests
-        working-directory: playwright_automation
+        env:
+          TEST_ENVIRONMENT: dev # <-- Set environment here
         run: npx playwright test
 
       - name: Upload Playwright report
