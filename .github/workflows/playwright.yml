@@ -37,13 +37,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Playwright browsers
+      - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
       - name: Load environment variables
         run: |
+          echo "Loading env file"
           cp env/dev.env .env
-          echo "TEST_ENVIRONMENT=dev" >> .env
+          cat .env
 
       - name: Run Playwright tests
         run: npx playwright test
