@@ -21,11 +21,17 @@ jobs:
       run:
         working-directory: playwright_automation
 
+    env:
+      TEST_ENVIRONMENT: dev
+      CLAS_WEB_URL: ${{ secrets.CLAS_WEB_URL }}
+      CLAS_USERNAME: ${{ secrets.CLAS_USERNAME }}
+      CLAS_PASSWORD: ${{ secrets.CLAS_PASSWORD }}
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          clean: true
+          clean: false # avoid EACCES issues
 
       - name: Use Node.js
         uses: actions/setup-node@v4
@@ -37,10 +43,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run Playwright tests
-        run: npx playwright test
+      - name: Load local env if present
+        if: ${{ runner.os != 'Linux' }} # local dev only
+        run: |
+          if [ -f "./env/dev.env" ]; then
+            echo "Loading local env vars..."
+            export $(grep -v '^#' ./env/dev.env | xargs)
+          fi
 
-      - name: Upload Playwright report
+      - name: Run Playwright tests
+        run: npx playwright test --reporter=list
+
+      - name: Upload Playwright HTML report
         if: always()
         uses: actions/upload-artifact@v4
         with:
