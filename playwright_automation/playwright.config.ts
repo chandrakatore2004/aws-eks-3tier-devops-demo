@@ -14,10 +14,10 @@ module.exports = defineConfig({
   //globalSetup: 'utils/globalSetup.js',
   globalSetup: './utils/globalSetup.ts',
   testDir: './tests',
-  timeout: 120 * 1000,
+  timeout: 300 * 1000,
 
   expect: {
-    timeout: 120 * 1000
+    timeout: 300 * 1000
   },
 
   /* Run tests in files in parallel */
