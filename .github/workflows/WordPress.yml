@@ -1,0 +1,53 @@
+name: WordPress Deploy Single File
+
+# Triggers
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'wordpress/wp-content/themes/twentytwentyfive/screenshot.png'
+  workflow_dispatch:  # Manual trigger
+
+# Permissions for OIDC
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_REGION: ap-south-1  # Set your AWS region
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, linux, qa]
+
+    steps:
+      # Step 1: Checkout repo
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Step 2: Configure AWS credentials (OIDC)
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Step 3: Get WordPress pod name
+      - name: Get WordPress Pod
+        id: get_pod
+        run: |
+          POD=$(kubectl get pods -n default -l app.kubernetes.io/name=wordpress -o jsonpath="{.items[0].metadata.name}")
+          echo "WORDPRESS_POD=$POD" >> $GITHUB_ENV
+
+      # Step 4: Sync the single file
+      - name: Sync screenshot.png
+        run: |
+          kubectl cp wordpress/wp-content/themes/twentytwentyfive/screenshot.png \
+          default/$WORDPRESS_POD:/bitnami/wordpress/wp-content/themes/twentytwentyfive/screenshot.png
+          kubectl exec -n default $WORDPRESS_POD -- chown 1001:1001 /bitnami/wordpress/wp-content/themes/twentytwentyfive/screenshot.png
+
+      # Step 5: Restart WordPress pod
+      - name: Restart WordPress Pod
+        run: |
+          kubectl rollout restart deployment wp-wordpress -n default
