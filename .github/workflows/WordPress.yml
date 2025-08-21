@@ -40,13 +40,20 @@ jobs:
           POD=$(kubectl get pods -n default -l app.kubernetes.io/name=wordpress -o jsonpath="{.items[0].metadata.name}")
           echo "WORDPRESS_POD=$POD" >> $GITHUB_ENV
 
-      # Step 4: Sync all themes
+      # Step 4: Sync WordPress Themes using tar
       - name: Sync WordPress Themes
         run: |
           echo "Syncing themes to WordPress pod..."
-          kubectl exec -n default $WORDPRESS_POD -- mkdir -p /bitnami/wordpress/wp-content/themes
-          rsync -av --delete wordpress/wp-content/themes/ default/$WORDPRESS_POD:/bitnami/wordpress/wp-content/themes/
-          kubectl exec -n default $WORDPRESS_POD -- chown -R 1001:1001 /bitnami/wordpress/wp-content/themes/
+          POD=$WORDPRESS_POD
+
+          # Ensure target directory exists
+          kubectl exec -n default $POD -- mkdir -p /bitnami/wordpress/wp-content/themes
+
+          # Stream all local theme files into pod
+          tar -C wordpress/wp-content/themes -cf - . | kubectl exec -i -n default $POD -- tar -C /bitnami/wordpress/wp-content/themes -xf -
+
+          # Set correct ownership for WordPress
+          kubectl exec -n default $POD -- chown -R 1001:1001 /bitnami/wordpress/wp-content/themes
 
       # Step 5: Restart WordPress pod to apply changes
       - name: Restart WordPress Pod
