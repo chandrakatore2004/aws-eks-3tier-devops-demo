@@ -1,12 +1,12 @@
-name: WordPress Deploy Single File
+name: WordPress Deploy Themes
 
 # Triggers
 on:
   push:
     branches:
-      - develop
+      - main
     paths:
-      - 'wordpress/wp-content/themes/twentytwentyfive/screenshot.png'
+      - 'wordpress/wp-content/themes/**'   # Trigger for any theme changes
   workflow_dispatch:  # Manual trigger
 
 # Permissions for OIDC
@@ -40,14 +40,15 @@ jobs:
           POD=$(kubectl get pods -n default -l app.kubernetes.io/name=wordpress -o jsonpath="{.items[0].metadata.name}")
           echo "WORDPRESS_POD=$POD" >> $GITHUB_ENV
 
-      # Step 4: Sync the single file
-      - name: Sync screenshot.png
+      # Step 4: Sync all themes
+      - name: Sync WordPress Themes
         run: |
-          kubectl cp wordpress/wp-content/themes/twentytwentyfive/screenshot.png \
-          default/$WORDPRESS_POD:/bitnami/wordpress/wp-content/themes/twentytwentyfive/screenshot.png
-          kubectl exec -n default $WORDPRESS_POD -- chown 1001:1001 /bitnami/wordpress/wp-content/themes/twentytwentyfive/screenshot.png
+          echo "Syncing themes to WordPress pod..."
+          kubectl exec -n default $WORDPRESS_POD -- mkdir -p /bitnami/wordpress/wp-content/themes
+          rsync -av --delete wordpress/wp-content/themes/ default/$WORDPRESS_POD:/bitnami/wordpress/wp-content/themes/
+          kubectl exec -n default $WORDPRESS_POD -- chown -R 1001:1001 /bitnami/wordpress/wp-content/themes/
 
-      # Step 5: Restart WordPress pod
+      # Step 5: Restart WordPress pod to apply changes
       - name: Restart WordPress Pod
         run: |
           kubectl rollout restart deployment wp-wordpress -n default
