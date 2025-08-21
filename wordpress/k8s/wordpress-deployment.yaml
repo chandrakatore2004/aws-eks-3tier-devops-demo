@@ -1,0 +1,289 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+    meta.helm.sh/release-name: wp
+    meta.helm.sh/release-namespace: default
+  creationTimestamp: "2025-08-21T05:49:53Z"
+  generation: 1
+  labels:
+    app.kubernetes.io/instance: wp
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: wordpress
+    app.kubernetes.io/version: 6.8.2
+    helm.sh/chart: wordpress-26.0.0
+  name: wp-wordpress
+  namespace: default
+  resourceVersion: "14663069"
+  uid: e2d5b8dd-0e23-4f36-ab55-64fbe82ea7f0
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: wp
+      app.kubernetes.io/name: wordpress
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app.kubernetes.io/instance: wp
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: wordpress
+        app.kubernetes.io/version: 6.8.2
+        helm.sh/chart: wordpress-26.0.0
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/instance: wp
+                  app.kubernetes.io/name: wordpress
+              topologyKey: kubernetes.io/hostname
+            weight: 1
+      automountServiceAccountToken: false
+      containers:
+      - env:
+        - name: BITNAMI_DEBUG
+          value: "false"
+        - name: ALLOW_EMPTY_PASSWORD
+          value: "yes"
+        - name: WORDPRESS_SKIP_BOOTSTRAP
+          value: "no"
+        - name: MARIADB_HOST
+          value: wp-mariadb
+        - name: MARIADB_PORT_NUMBER
+          value: "3306"
+        - name: WORDPRESS_DATABASE_NAME
+          value: bitnami_wordpress
+        - name: WORDPRESS_DATABASE_USER
+          value: bn_wordpress
+        - name: WORDPRESS_DATABASE_PASSWORD_FILE
+          value: /secrets/mariadb-password
+        - name: WORDPRESS_USERNAME
+          value: admin
+        - name: WORDPRESS_PASSWORD_FILE
+          value: /secrets/wordpress-password
+        - name: WORDPRESS_EMAIL
+          value: admin@example.com
+        - name: WORDPRESS_FIRST_NAME
+          value: FirstName
+        - name: WORDPRESS_LAST_NAME
+          value: LastName
+        - name: WORDPRESS_HTACCESS_OVERRIDE_NONE
+          value: "no"
+        - name: WORDPRESS_ENABLE_HTACCESS_PERSISTENCE
+          value: "no"
+        - name: WORDPRESS_BLOG_NAME
+          value: User's Blog!
+        - name: WORDPRESS_TABLE_PREFIX
+          value: wp_
+        - name: WORDPRESS_SCHEME
+          value: http
+        - name: WORDPRESS_EXTRA_WP_CONFIG_CONTENT
+        - name: WORDPRESS_PLUGINS
+          value: none
+        - name: WORDPRESS_OVERRIDE_DATABASE_SETTINGS
+          value: "no"
+        - name: APACHE_HTTP_PORT_NUMBER
+          value: "8080"
+        - name: APACHE_HTTPS_PORT_NUMBER
+          value: "8443"
+        image: docker.io/bitnami/wordpress:6.8.2-debian-12-r4
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 6
+          initialDelaySeconds: 120
+          periodSeconds: 10
+          successThreshold: 1
+          tcpSocket:
+            port: http
+          timeoutSeconds: 5
+        name: wordpress
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        - containerPort: 8443
+          name: https
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 6
+          httpGet:
+            path: /wp-login.php
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        resources:
+          limits:
+            cpu: 375m
+            ephemeral-storage: 2Gi
+            memory: 384Mi
+          requests:
+            cpu: 250m
+            ephemeral-storage: 50Mi
+            memory: 256Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+          runAsGroup: 1001
+          runAsNonRoot: true
+          runAsUser: 1001
+          seLinuxOptions: {}
+          seccompProfile:
+            type: RuntimeDefault
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /opt/bitnami/apache/conf
+          name: empty-dir
+          subPath: apache-conf-dir
+        - mountPath: /opt/bitnami/apache/logs
+          name: empty-dir
+          subPath: apache-logs-dir
+        - mountPath: /opt/bitnami/apache/var/run
+          name: empty-dir
+          subPath: apache-tmp-dir
+        - mountPath: /opt/bitnami/php/etc
+          name: empty-dir
+          subPath: php-conf-dir
+        - mountPath: /opt/bitnami/php/tmp
+          name: empty-dir
+          subPath: php-tmp-dir
+        - mountPath: /opt/bitnami/php/var
+          name: empty-dir
+          subPath: php-var-dir
+        - mountPath: /tmp
+          name: empty-dir
+          subPath: tmp-dir
+        - mountPath: /opt/bitnami/wordpress
+          name: empty-dir
+          subPath: app-base-dir
+        - mountPath: /bitnami/wordpress
+          name: wordpress-data
+          subPath: wordpress
+        - mountPath: /secrets
+          name: wordpress-secrets
+      dnsPolicy: ClusterFirst
+      hostAliases:
+      - hostnames:
+        - status.localhost
+        ip: 127.0.0.1
+      initContainers:
+      - args:
+        - -ec
+        - |
+          #!/bin/bash
+
+          . /opt/bitnami/scripts/liblog.sh
+          . /opt/bitnami/scripts/libfs.sh
+
+          info "Copying base dir to empty dir"
+          # In order to not break the application functionality (such as upgrades or plugins) we need
+          # to make the base directory writable, so we need to copy it to an empty dir volume
+          cp -r --preserve=mode /opt/bitnami/wordpress /emptydir/app-base-dir
+
+          info "Copying symlinks to stdout/stderr"
+          # We copy the logs folder because it has symlinks to stdout and stderr
+          if ! is_dir_empty /opt/bitnami/apache/logs; then
+            cp -r /opt/bitnami/apache/logs /emptydir/apache-logs-dir
+          fi
+
+          info "Copying default PHP config"
+          cp -r --preserve=mode /opt/bitnami/php/etc /emptydir/php-conf-dir
+
+          info "Copying php var directory"
+          if ! is_dir_empty /opt/bitnami/php/var; then
+            cp -r /opt/bitnami/php/var /emptydir/php-var-dir
+          fi
+
+          info "Copy operation completed"
+        command:
+        - /bin/bash
+        image: docker.io/bitnami/wordpress:6.8.2-debian-12-r4
+        imagePullPolicy: IfNotPresent
+        name: prepare-base-dir
+        resources:
+          limits:
+            cpu: 375m
+            ephemeral-storage: 2Gi
+            memory: 384Mi
+          requests:
+            cpu: 250m
+            ephemeral-storage: 50Mi
+            memory: 256Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+          runAsGroup: 1001
+          runAsNonRoot: true
+          runAsUser: 1001
+          seLinuxOptions: {}
+          seccompProfile:
+            type: RuntimeDefault
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /emptydir
+          name: empty-dir
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        fsGroup: 1001
+        fsGroupChangePolicy: Always
+      serviceAccount: wp-wordpress
+      serviceAccountName: wp-wordpress
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - emptyDir: {}
+        name: empty-dir
+      - name: wordpress-secrets
+        projected:
+          defaultMode: 420
+          sources:
+          - secret:
+              name: wp-wordpress
+          - secret:
+              name: wp-mariadb
+      - name: wordpress-data
+        persistentVolumeClaim:
+          claimName: wp-wordpress
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2025-08-21T06:04:15Z"
+    lastUpdateTime: "2025-08-21T06:04:15Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2025-08-21T06:04:15Z"
+    lastUpdateTime: "2025-08-21T06:04:15Z"
+    message: ReplicaSet "wp-wordpress-f87cd8c5c" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 1
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1

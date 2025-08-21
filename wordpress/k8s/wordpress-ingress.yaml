@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"networking.k8s.io/v1","kind":"Ingress","metadata":{"annotations":{"alb.ingress.kubernetes.io/scheme":"internet-facing","alb.ingress.kubernetes.io/target-type":"ip"},"name":"wordpress-ingress","namespace":"default"},"spec":{"ingressClassName":"alb","rules":[{"http":{"paths":[{"backend":{"service":{"name":"wp-wordpress","port":{"number":80}}},"path":"/","pathType":"Prefix"}]}}]}}
+  creationTimestamp: "2025-08-21T07:02:24Z"
+  finalizers:
+  - ingress.k8s.aws/resources
+  generation: 2
+  name: wordpress-ingress
+  namespace: default
+  resourceVersion: "14679661"
+  uid: ca01a72a-aff5-47d7-8f88-c666085bce66
+spec:
+  ingressClassName: alb
+  rules:
+  - http:
+      paths:
+      - backend:
+          service:
+            name: wp-wordpress
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+status:
+  loadBalancer:
+    ingress:
+    - hostname: k8s-default-wordpres-38839cab55-2033703624.ap-south-1.elb.amazonaws.com
