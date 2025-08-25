@@ -19,6 +19,11 @@ jobs:
   deploy:
     runs-on: [self-hosted, linux, qa]
 
+    defaults:
+      run:
+        working-directory: family-helper  # 👈 change to your app folder
+
+
     steps:
       # Step 1: Checkout repo
       - name: Checkout Code
