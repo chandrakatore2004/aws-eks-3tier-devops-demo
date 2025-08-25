@@ -15,7 +15,7 @@ function App() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Learn React For DevOps Testing Project
+          Learn React For DevOps CI-CD Test Project
         </a>
       </header>
     </div>
