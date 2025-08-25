@@ -1,13 +1,11 @@
 name: Deploy to Amplify
 
-# Triggers
 on:
   push:
     branches:
       - develop   # auto-deploy on develop branch
   workflow_dispatch:  # allow manual trigger
 
-# Permissions for OIDC
 permissions:
   contents: read
   id-token: write
@@ -22,7 +20,6 @@ jobs:
     defaults:
       run:
         working-directory: family-helper  # 👈 change to your app folder
-
 
     steps:
       # Step 1: Checkout repo
@@ -57,10 +54,40 @@ jobs:
       - name: Build React app
         run: npm run build
 
-      # Step 6: Deploy to Amplify
-      - name: Deploy to Amplify
+      # Step 6: Trigger Amplify deploy
+      - name: Start Amplify Job
+        id: amplify
         run: |
-          aws amplify start-job \
+          JOB_ID=$(aws amplify start-job \
             --app-id ${{ secrets.AMPLIFY_APP_ID }} \
             --branch-name ${{ secrets.AMPLIFY_BRANCH_NAME }} \
-            --job-type RELEASE
+            --job-type RELEASE \
+            --query "jobSummary.jobId" \
+            --output text)
+
+          echo "JOB_ID=$JOB_ID" >> $GITHUB_ENV
+          echo "Triggered Amplify job with ID: $JOB_ID"
+
+      # Step 7: Wait for Amplify job to finish
+      - name: Wait for Amplify Job to Finish
+        run: |
+          while true; do
+            STATUS=$(aws amplify get-job \
+              --app-id ${{ secrets.AMPLIFY_APP_ID }} \
+              --branch-name ${{ secrets.AMPLIFY_BRANCH_NAME }} \
+              --job-id $JOB_ID \
+              --query "job.summary.status" \
+              --output text)
+
+            echo "Current status: $STATUS"
+
+            if [ "$STATUS" == "SUCCEED" ]; then
+              echo "✅ Amplify deployment succeeded."
+              break
+            elif [ "$STATUS" == "FAILED" ]; then
+              echo "❌ Amplify deployment failed."
+              exit 1
+            fi
+
+            sleep 15
+          done
