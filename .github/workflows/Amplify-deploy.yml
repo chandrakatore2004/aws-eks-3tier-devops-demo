@@ -3,8 +3,8 @@ name: Deploy to Amplify
 on:
   push:
     branches:
-      - develop   # auto-deploy only on develop branch
-  workflow_dispatch:  # allow manual trigger
+      - develop   # deploy only when pushing to develop
+  workflow_dispatch: # manual trigger
 
 permissions:
   contents: read
@@ -19,7 +19,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: family-helper  # 👈 adjust to your app folder
+        working-directory: family-helper # 👈 adjust to your project root
 
     steps:
       # Step 1: Checkout repo
@@ -52,24 +52,27 @@ jobs:
       - name: Build React app
         run: npm run build
 
-      # Step 6: Trigger Amplify Deployment
-      - name: Trigger Amplify Job
+      # Step 6: Trigger Amplify deployment with Git commit message
+      - name: Start Amplify job
         id: amplify
         run: |
+          COMMIT_MESSAGE="$(git log -1 --pretty=%B)"
+          echo "Using commit message: $COMMIT_MESSAGE"
+
           JOB_ID=$(aws amplify start-job \
             --app-id ${{ secrets.AMPLIFY_APP_ID }} \
             --branch-name ${{ secrets.AMPLIFY_BRANCH_NAME }} \
             --job-type RELEASE \
             --commit-id $GITHUB_SHA \
-            --commit-message "Deployed via GitHub Actions: $GITHUB_SHA" \
+            --commit-message "$COMMIT_MESSAGE" \
             --query "jobSummary.jobId" \
             --output text)
 
           echo "JOB_ID=$JOB_ID" >> $GITHUB_ENV
           echo "Triggered Amplify job with ID: $JOB_ID"
 
-      # Step 7: Wait for Amplify Job Completion
-      - name: Wait for Amplify Job
+      # Step 7: Wait for Amplify job to finish
+      - name: Wait for Amplify Deployment
         run: |
           while true; do
             STATUS=$(aws amplify get-job \
