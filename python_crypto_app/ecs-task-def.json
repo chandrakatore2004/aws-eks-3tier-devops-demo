@@ -1,0 +1,29 @@
+{
+  "family": "crypto-app-task",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::596169662054:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "crypto-app",
+      "image": "${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com/crypto-app:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 5000,
+          "protocol": "tcp"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/crypto-app",
+          "awslogs-region": "ap-south-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}
