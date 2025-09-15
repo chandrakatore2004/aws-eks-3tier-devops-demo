@@ -8,7 +8,7 @@
   "containerDefinitions": [
     {
       "name": "crypto-app",
-      "image": "${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com/crypto-app:latest",
+      "image": "IMAGE_URI",
       "essential": true,
       "portMappings": [
         {
