@@ -1,9 +1,7 @@
 name: Deploy Static Website to S3 + CloudFront
 
 on:
-  push:
-    branches:
-      - develop
+
   workflow_dispatch:
 
 permissions:

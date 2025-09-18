@@ -1,9 +1,9 @@
 name: Deploy to Amplify
 
 on:
-  push:
-    branches:
-      - develop   # deploy only when pushing to develop
+  # push:
+  #   branches:
+  #     - develop   # deploy only when pushing to develop
   workflow_dispatch: # manual trigger
 
 permissions:
