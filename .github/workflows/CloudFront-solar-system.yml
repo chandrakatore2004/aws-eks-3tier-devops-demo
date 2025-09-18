@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  id-token: write   # required for OIDC
+  id-token: write
   contents: read
 
 env:
@@ -34,7 +34,7 @@ jobs:
 
       # Invalidate CloudFront cache
       - name: Invalidate CloudFront cache
-        uses: chetan/invalidate-cloudfront-action@v2
-        with:
-          distribution: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
-          paths: "/*"
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"
