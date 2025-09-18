@@ -1,17 +1,16 @@
-name: Deploy Static Website to S3 + CloudFront
+name: CloudFront -Deploy Static Website tofrom S3
 
 on:
-
   workflow_dispatch:
 
 permissions:
-  id-token: write
+  id-token: write   # required for OIDC
   contents: read
 
 env:
   WORK_DIR: CloudFront/solar-system
-  AWS_REGION: ap-south-1
-  AWS_S3_BUCKET: cloudfront-solar-system
+  AWS_REGION: us-east-1
+  AWS_S3_BUCKET: cloudfront-solar-systems
 
 jobs:
   deploy:
@@ -21,33 +20,24 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v3
 
-      # Optional: If you have a build step (npm run build), enable Node
-      # - name: Setup Node
-      #   uses: actions/setup-node@v3
-      #   with:
-      #     node-version: '18'
+      # Authenticate to AWS via OIDC
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::355511498283:role/github-actions-role
+          aws-region: ${{ env.AWS_REGION }}
 
-      # - name: Install dependencies
-      #   run: npm install --prefix $WORK_DIR
-      #
-      # - name: Build project
-      #   run: npm run build --prefix $WORK_DIR
-
+      # Sync files to S3
       - name: Sync files to S3
         uses: aws-actions/s3-sync@v2
         with:
           bucket: ${{ env.AWS_S3_BUCKET }}
           region: ${{ env.AWS_REGION }}
           source-dir: ${{ env.WORK_DIR }}
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
+      # Invalidate CloudFront cache
       - name: Invalidate CloudFront cache
         uses: chetan/invalidate-cloudfront-action@v2
         with:
           distribution: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
           paths: "/*"
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
