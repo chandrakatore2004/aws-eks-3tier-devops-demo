@@ -1,0 +1,33 @@
+name: Create S3 Bucket with OIDC
+
+on:
+  workflow_dispatch:   # run manually
+  push:
+    branches:
+      - develop        # or change to your branch
+
+jobs:
+  create-bucket:
+    runs-on: [self-hosted, linux, qa]   # 👈 this ensures your EC2 runner is used
+    permissions:
+      id-token: write      # 👈 required for OIDC
+      contents: read       # 👈 required for actions/checkout
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::355511498283:role/github-actions-role
+          aws-region: us-east-1   # change region if needed
+
+      - name: Verify AWS identity
+        run: aws sts get-caller-identity
+
+      - name: Create S3 bucket
+        run: |
+          BUCKET_NAME=my-oidc-demo-$(date +%s)
+          echo "Creating bucket: $BUCKET_NAME"
+          aws s3 mb s3://$BUCKET_NAME --region us-east-1
