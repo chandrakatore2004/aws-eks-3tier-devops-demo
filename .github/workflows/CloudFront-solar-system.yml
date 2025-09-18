@@ -1,4 +1,4 @@
-name: CloudFront -Deploy Static Website tofrom S3
+name: CloudFront - Deploy Static Website from S3
 
 on:
   workflow_dispatch:
@@ -29,11 +29,8 @@ jobs:
 
       # Sync files to S3
       - name: Sync files to S3
-        uses: aws-actions/s3-sync@v2
-        with:
-          bucket: ${{ env.AWS_S3_BUCKET }}
-          region: ${{ env.AWS_REGION }}
-          source-dir: ${{ env.WORK_DIR }}
+        run: |
+          aws s3 sync ${{ env.WORK_DIR }} s3://${{ env.AWS_S3_BUCKET }} --region ${{ env.AWS_REGION }} --delete
 
       # Invalidate CloudFront cache
       - name: Invalidate CloudFront cache
