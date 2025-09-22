@@ -8,7 +8,7 @@ permissions:
   contents: read    # required to checkout code
 
 env:
-  WORK_DIR: Lambda-Project
+  WORK_DIR: Lambda-Project/lambda-app
   AWS_REGION: us-east-1
 
 jobs:
