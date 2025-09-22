@@ -8,7 +8,7 @@ permissions:
   contents: read    # required to checkout code
 
 env:
-  WORK_DIR: Lambda-Project/lambda-app
+  WORK_DIR: Lambda-Project
   AWS_REGION: us-east-1
 
 jobs:
@@ -31,7 +31,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install test dependencies
-        run: pip install -r lambda-app/tests/requirements.txt
+        run: pip install -r Lambda-Project/lambda-app/tests/requirements.txt
 
       - name: Run tests
         run: pytest
@@ -40,9 +40,9 @@ jobs:
         uses: aws-actions/setup-sam@v2
 
       - name: Build SAM app
-        run: sam build -t lambda-app/template.yaml
+        run: sam build -t Lambda-Project/lambda-app/template.yaml
 
       - name: Deploy SAM app
-        run: sam deploy -t lambda-app/template.yaml \
+        run: sam deploy -t Lambda-Project/lambda-app/template.yaml \
           --no-confirm-changeset \
           --no-fail-on-empty-changeset
